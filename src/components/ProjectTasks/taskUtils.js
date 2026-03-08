@@ -3,6 +3,8 @@
  * 專門處理純邏輯運算，不涉及 React 狀態或 UI
  */
 
+import { getLocalDateKeyForRepeat } from '../../utils/projectTaskRepeatUtils';
+
 // 等級定義映射
 export const generateLevelMap = () => {
   const map = { 'NONE': { next: 'A', prev: 'NONE' } };
@@ -157,7 +159,7 @@ export const calculateTaskProgress = (task, options = {}) => {
     }
     // 狀況二：無截止日的重複任務 → 根據當下完成與否顯示（100% 或 0%）
     if (!hasDueDate) {
-      const currentKey = getLocalDateKey(new Date(), unit);
+      const currentKey = getLocalDateKeyForRepeat(task, new Date());
       const p = getRepeatProgressForDateKey(task, currentKey);
       return p !== null ? p : (task.status === 'completed' ? 100 : 0);
     }
@@ -229,9 +231,8 @@ export const updateTaskInTreeWithRepeatLogPropagation = (list, taskId, updater) 
       const rep = newTask.details?.repeat;
       const enabled = rep && (rep.enabled === true || rep.enabled === 'true');
       if (enabled) {
-        const unit = rep?.unit || 'day';
         const now = new Date();
-        const currentKey = getLocalDateKey(now, unit);
+        const currentKey = getLocalDateKeyForRepeat(newTask, now);
         const nextLog = { ...(newTask.details?.repeatLog || {}) };
         const isCompleted = newTask.status === 'completed' || newTask.completed === true;
         const progressVal = typeof newTask.details?.progress === 'number' ? newTask.details.progress : (isCompleted ? 100 : 0);

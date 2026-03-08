@@ -18,7 +18,7 @@ import { useTaskReminders } from '../../hooks/useTaskReminders';
 import RepeatLogModal from './SubPanels/RepeatLogModal';
 import TemplateModal from './SubPanels/TemplateModal';
 import { PROJECT_TASKS_UPDATED_EVENT, TASK_TAGS_UPDATED_EVENT } from '../GlobalAddTaskModal';
-import { resetTaskTreeIfNeeded } from '../../utils/projectTaskRepeatUtils';
+import { resetTaskTreeIfNeeded, getLocalDateKeyForRepeat } from '../../utils/projectTaskRepeatUtils';
 
 const DEFAULT_REPEAT = {
   enabled: false,
@@ -476,9 +476,8 @@ const ProjectList = () => {
   const updateCurrentWindowLog = useCallback((task) => {
     const rep = task?.details?.repeat || DEFAULT_REPEAT;
     if (!rep || !rep.enabled) return task;
-    const unit = rep.unit || 'day';
     const now = new Date();
-    const currentKey = getLocalDateKey(now, unit);
+    const currentKey = getLocalDateKeyForRepeat(task, now);
     const nextRepeatLog = { ...(task.details?.repeatLog || {}) };
     const isCompleted = task.status === 'completed' || task.completed === true;
     const progressVal = typeof task.details?.progress === 'number' ? task.details.progress : (isCompleted ? 100 : 0);
@@ -497,7 +496,7 @@ const ProjectList = () => {
       taskSnapshot: currentSnapshot
     };
     return { ...task, details: { ...task.details, repeatLog: nextRepeatLog } };
-  }, [getLocalDateKey]);
+  }, []);
 
   // --- 5. 核心操作函數 ---
   const handleStatusChange = (taskId, newStatus) => {

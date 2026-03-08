@@ -25,6 +25,66 @@ const getLocalDateKey = (d, unit = 'day') => {
   return `${year}-${month}-${day}`;
 };
 
+/** 取得該日期所在週的週一 */
+const getMondayOfWeek = (d) => {
+  const date = new Date(d);
+  const dayOfWeek = date.getDay();
+  const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+  const monday = new Date(date);
+  monday.setDate(diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+};
+
+/**
+ * 依任務的 repeat 設定取得 dateKey（支援 interval、anchor）
+ * 每 N 週任務會產生 N 週間隔的 key（如 W-2026-02-23, W-2026-03-09）
+ */
+export const getLocalDateKeyForRepeat = (task, d) => {
+  const rep = task?.details?.repeat;
+  const unit = rep?.unit || 'day';
+  const interval = Math.max(1, Number(rep?.interval || 1));
+  if (unit !== 'week' || interval <= 1) return getLocalDateKey(d, unit);
+  const anchor = task.details?.startDate
+    ? new Date(task.details.startDate)
+    : rep?.anchorAt
+      ? new Date(rep.anchorAt)
+      : task.created
+        ? new Date(task.created)
+        : new Date();
+  const anchorMonday = getMondayOfWeek(anchor);
+  const mondayOfD = getMondayOfWeek(d);
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  const weeksSinceAnchor = (mondayOfD.getTime() - anchorMonday.getTime()) / msPerWeek;
+  const periodIndex = Math.floor(weeksSinceAnchor / interval);
+  const periodStartMonday = new Date(anchorMonday.getTime() + periodIndex * interval * msPerWeek);
+  return `W-${periodStartMonday.getFullYear()}-${String(periodStartMonday.getMonth() + 1).padStart(2, '0')}-${String(periodStartMonday.getDate()).padStart(2, '0')}`;
+};
+
+/**
+ * 將 dateKey 轉為顯示用日期字串（依 startDate 的星期幾）
+ * 若任務有 startDate，顯示該週對應星期幾的日期（如每週五→顯示週五日期）
+ * 若無 startDate，顯示該週週一日期（去掉 W- 前綴）
+ */
+export const formatDateKeyForDisplay = (dateKey, task) => {
+  if (!dateKey || !dateKey.startsWith('W-')) return dateKey;
+  const rep = task?.details?.repeat;
+  if (rep?.unit !== 'week') return dateKey.replace(/^W-/, '') || dateKey;
+  const startStr = task.details?.startDate;
+  if (!startStr) return dateKey.replace(/^W-/, '') || dateKey;
+  const startDate = new Date(startStr);
+  const targetWeekday = startDate.getDay();
+  const match = dateKey.match(/^W-(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return dateKey;
+  const monday = new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
+  const targetDate = new Date(monday);
+  targetDate.setDate(monday.getDate() + (targetWeekday === 0 ? 6 : targetWeekday - 1));
+  const y = targetDate.getFullYear();
+  const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const d = String(targetDate.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 const getInheritedDueDate = (allTasksState, task) => {
   const findParent = (list, targetId) => {
     for (const t of list) {
@@ -132,7 +192,7 @@ const resetTaskTreeIfNeeded = (task, allTasksState) => {
           : new Date();
     if (checkTime < anchor) checkTime = new Date(anchor.getTime());
     while (checkTime.getTime() < windowStart.getTime()) {
-      const key = getLocalDateKey(checkTime, unit);
+      const key = getLocalDateKeyForRepeat(task, checkTime);
       if (!nextRepeatLog[key]) {
         const nextCheckTime = addCycle(checkTime);
         const isJustFinished = nextCheckTime.getTime() >= windowStart.getTime();

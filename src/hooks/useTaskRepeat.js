@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import * as TaskUtils from '../components/ProjectTasks/taskUtils';
+import { formatDateKeyForDisplay } from '../utils/projectTaskRepeatUtils';
 
 export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey) => {
   const [showRepeatLogModal, setShowRepeatLogModal] = useState(false);
@@ -13,7 +14,7 @@ export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey)
     const log = selectedTask.details?.repeatLog || {};
     return Object.entries(log).map(([dateKey, info]) => ({
       dateKey,
-      displayDate: dateKey,
+      displayDate: formatDateKeyForDisplay(dateKey, selectedTask) || dateKey,
       completed: Boolean(info?.completed),
       maxProgress: info?.maxProgress ?? null,
       taskSnapshot: info?.taskSnapshot || []
