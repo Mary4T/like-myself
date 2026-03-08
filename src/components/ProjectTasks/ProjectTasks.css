@@ -1,0 +1,3797 @@
+.root-droppable-zone {
+  transition: all 0.3s ease;
+  display: block;
+  margin: 10px 0;
+}
+
+.root-droppable-zone.droppable-hover {
+  background-color: rgba(82, 208, 255, 0.1);
+  border-color: #52D0FF !important;
+}
+
+.droppable-parent {
+  min-height: 50px;
+}.project-container {
+  display: flex;
+  height: 100vh;
+  background: #f5f6f8;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 左側項目列表 - 向左縮一點 */
+.project-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background: white;
+  border-right: 1px solid #eee;
+  padding: 20px;
+  overflow-y: auto; /* 添加滾動條 */
+}
+
+.project-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.project-header h2 {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.add-project-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #52D0FF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-project-btn:hover {
+  background: #47b8e0;
+}
+
+/* 項目樹狀結構 */
+.project-tree {
+  padding-left: 25px; /* 左側預留 52px 空白 */
+  min-height: 100px; /* 確保即使沒有項目也能拖放 */
+  position: relative;
+  z-index: 1;
+}
+
+.project-item {
+  margin: 4px 0;
+  transition: background-color 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.project-item:hover {
+  background-color: rgba(0,0,0,0.02);
+}
+
+/* ==========================================================================
+   【穩定版】原位保留 + 幻影拖曳 + 藍色指示線
+   ========================================================================== */
+
+/* 1. 拖曳開始時，背景凍結：禁止任何任務位移 */
+body.is-dragging-task .project-item:not(.is-phantom) {
+  transform: none !important;
+  transition: none !important;
+}
+
+/* 2. 留守本體：當任務被拖走時，留在原地填補空間的備份 */
+.origin-static-placeholder {
+  opacity: 0.4;
+  filter: grayscale(0.8);
+  pointer-events: none;
+  margin: 4px 0;
+}
+
+/* 3. 拖曳幻影：跟隨滑鼠的那個 */
+.is-phantom {
+  opacity: 0.8 !important;
+  background: #f0f8ff !important;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+  z-index: 10000 !important;
+  pointer-events: none;
+}
+
+/* 4. 方案 B：邊框碰撞指示器 (簡潔版) */
+
+/* 當項目被判定為上方插入點時 */
+.project-item.drop-target-top {
+  position: relative;
+  z-index: 200;
+}
+
+.project-item.drop-target-top::before {
+  content: "";
+  position: absolute;
+  top: -1.5px; /* 置中於間隙 */
+  left: 0;
+  right: 0;
+  height: 2px; /* 恢復細線，更乾淨 */
+  background-color: #00A3FF; 
+  box-shadow: none; /* 移除發光 */
+  border-radius: 1px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* 當項目被判定為下方插入點時 */
+.project-item.drop-target-bottom {
+  position: relative;
+  z-index: 200;
+}
+
+.project-item.drop-target-bottom::after {
+  content: "";
+  position: absolute;
+  bottom: -1.5px; 
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #00A3FF;
+  box-shadow: none; /* 移除發光 */
+  border-radius: 1px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* 5. 強化嵌套感應區 */
+
+/* 平時的子任務容器 */
+.droppable-area {
+  min-height: 8px;
+  padding: 4px 0; /* 增加上下間距，讓滑鼠更容易落入感應區 */
+  margin-top: 2px;
+  transition: background-color 0.2s;
+  position: relative;
+  z-index: 2; /* 提高基本層級 */
+}
+
+/* 當處於拖曳模式時，讓子任務感應區更「突出」 */
+body.is-dragging-task .droppable-area {
+  min-height: 20px; /* 拖曳時臨時撐開感應區，增加命中面積 */
+  background-color: rgba(0, 163, 255, 0.02); /* 淡淡的底色幫助定位 */
+  border-radius: 4px;
+}
+
+/* 當滑鼠正懸浮在某個子任務容器上方時 */
+.droppable-area.is-dragging-over {
+  background-color: rgba(0, 163, 255, 0.05);
+  z-index: 10; /* 確保懸浮時它在最頂層 */
+}
+
+/* 確保父容器不會遮擋子容器的事件 */
+.project-subitems {
+  position: relative;
+  z-index: 5;
+}
+.project-item.is-phantom {
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1000;
+  height: auto !important; /* 忽略套件鎖定的高度 */
+  max-height: 40px !important; /* 限制在單行高度 */
+  overflow: hidden !important; /* 隱藏所有子任務 */
+}
+
+.project-item.is-phantom .project-subitems {
+  display: none !important;
+}
+
+.project-item.is-phantom .expand-icon {
+  transform: rotate(0deg) !important; /* 圖標顯示為收起 */
+}
+
+/* 原位備份樣式 */
+.project-item.origin-static-placeholder {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* 保留原生 placeholder，避免巢狀同層拖曳時目標位置失真 */
+[data-rbd-placeholder-context-id] {
+  display: block !important;
+}
+
+/* 幻影樣式優化 */
+.project-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  cursor: grab;
+  transition: background 0.2s;
+}
+
+.task-info-left {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* 層級標示與標題更靠左 */
+  flex: 1;
+}
+
+.task-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-subtask-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-subtask-btn:hover {
+  background: #f0faff;
+  color: #00A3FF;
+  border-color: #00A3FF;
+}
+
+.expand-icon {
+  cursor: pointer;
+  transition: transform 0.2s;
+  color: #999;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+/* 5. 確保 Droppable 容器相對定位，以便指示線定位 */
+.droppable-area, .root-droppable {
+  position: relative !important;
+  min-height: 5px;
+}
+
+
+
+.project-item-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 8px 14px 4px; /* 左側 4px，讓層級標示與標題更靠左 */
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  /* 只針對顏色與背景做動畫，避免拖曳時 layout 抖動 */
+  transition: background-color 0.2s ease, border-left-color 0.2s ease;
+  border-left: 3px solid transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  max-width: 98%; /* 讓任務條更靠近左側層級顏色條 */
+  margin-left: 2%; /* 向右靠齊，保留小間距 */
+}
+
+/* header 與子任務區之間保留一點距離，避免滑鼠一點點移動就跳到下方清單的 Droppable */
+.project-subitems {
+  margin-top: 2px;
+}
+
+.project-item-header:hover {
+  background: #f5f6f8;
+  border-left-color: #52D0FF;
+}
+
+.project-item-header.selected {
+  background: #e2f4ff;
+}
+
+/* 任務狀態的視覺指示 */
+.project-item-header.completed {
+  opacity: 0.7;
+}
+
+.project-item-header.completed .project-title {
+  text-decoration: line-through;
+  color: #666;
+}
+
+.expand-icon {
+  margin-right: 4px; /* 層級標示更靠左 */
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.project-subitems {
+  padding-left: 20px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  min-height: 10px; /* 確保空的容器也可以接收拖放 */
+}
+
+/* 拖曳時禁用 transition，避免視覺跳動 */
+body.is-dragging-task .project-subitems {
+  transition: none !important;
+}
+
+/* 隱藏未展開的子任務區域 */
+.project-subitems.hidden {
+  display: none;
+}
+
+/* 拖放區域樣式 */
+.droppable-area {
+  min-height: 20px; /* 增加空間 */
+  transition: background-color 0.1s; /* 縮短 transition 時間，減少視覺延遲 */
+  position: relative;
+  z-index: 1;
+}
+
+/* 根拖放區域樣式 */
+.root-droppable {
+  min-height: 50px;
+  transition: background-color 0.1s; /* 縮短 transition 時間 */
+  padding: 4px;
+  border-radius: 4px;
+  background-color: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+/* 拖放時的視覺提示 */
+[data-rbd-droppable-context-id] {
+  transition: background-color 0.1s; /* 縮短 transition 時間，減少視覺延遲 */
+  position: relative;
+  z-index: 1;
+}
+
+[data-rbd-droppable-context-id].droppable-hover {
+  background-color: rgba(82, 208, 255, 0.1);
+  border: 2px dashed #52D0FF;
+  border-radius: 6px;
+}
+
+/* 拖曳時的樣式優化 */
+[data-rbd-draggable-context-id] {
+  position: relative;
+  z-index: 1;
+}
+
+[data-rbd-draggable-context-id].dragging {
+  z-index: 1000;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  pointer-events: none;
+}
+
+/* 拖曳時的占位符樣式 */
+[data-rbd-placeholder-context-id] {
+  /* 使用與單一任務列相近的高度，減少版面跳動 */
+  min-height: 32px;
+  height: 32px; /* 固定高度，避免動態計算導致的跳動 */
+  background-color: rgba(82, 208, 255, 0.1);
+  border: 2px dashed #52D0FF;
+  border-radius: 6px;
+  margin: 4px 0;
+  position: relative;
+  z-index: 100; /* 提高 z-index，確保在嵌套 Droppable 中可見 */
+  flex-shrink: 0; /* 防止被壓縮 */
+}
+
+/* 拖曳時的穩定性樣式 */
+.project-item {
+  position: relative;
+  z-index: 1;
+}
+
+.project-item.dragging {
+  z-index: 1000;
+}
+
+/* 等級標記 */
+.level-badge {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  margin-right: 8px;
+  font-weight: bold;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.level-badge.level-a { 
+  background: #ff4d4d; 
+  color: white; 
+}
+
+.level-badge.level-b { 
+  background: #ffa64d; 
+  color: white; 
+}
+
+.level-badge.level-c { 
+  background: #4da6ff; 
+  color: white; 
+}
+
+.level-badge.level-d { 
+  background: #4dff4d; 
+  color: white; 
+}
+
+.level-badge.level-e { 
+  background: #2C2C2C; /* 非常深的灰色 */
+  color: white; 
+}
+
+.level-badge.level-f { 
+  background: #404040; /* 深灰色 */
+  color: white; 
+}
+
+.level-badge.level-g { 
+  background: #545454; /* 中深灰色 */
+  color: white; 
+}
+
+.level-badge.level-h { 
+  background: #686868; /* 中灰色 */
+  color: white; 
+}
+
+/* 其他擴展等級使用通用樣式 */
+[class*="level-badge"][class*="level-"] {
+  color: white;
+}
+
+/* 未在上面單獨定義的等級使用更深灰色 */
+.level-badge:not(.level-a):not(.level-b):not(.level-c):not(.level-d):not(.level-e):not(.level-f):not(.level-g):not(.level-h):not(.level-none) {
+  background: #787878; /* 淺灰色 */
+  color: white;
+}
+
+.level-badge.level-none {
+  background: #808080;  /* 灰色背景 */
+  color: white;
+}
+
+/* 項目等級樣式 - 移除背景顏色，只保留邊框 */
+.project-item.level-a {
+  border-left: 3px solid #ff4d4d;
+  background: white;
+}
+
+.project-item.level-b {
+  border-left: 3px solid #ffa64d;
+  background: white;
+}
+
+.project-item.level-c {
+  border-left: 3px solid #4da6ff;
+  background: white;
+}
+
+.project-item.level-d {
+  border-left: 3px solid #4dff4d;
+  background: white;
+}
+
+.project-item.level-e {
+  border-left: 3px solid #2C2C2C;
+  background: white;
+}
+
+.project-item.level-f {
+  border-left: 3px solid #404040;
+  background: white;
+}
+
+.project-item.level-g {
+  border-left: 3px solid #545454;
+  background: white;
+}
+
+.project-item.level-h {
+  border-left: 3px solid #686868;
+  background: white;
+}
+
+/* 其他擴展等級使用通用邊框顏色 */
+.project-item:not(.level-a):not(.level-b):not(.level-c):not(.level-d):not(.level-e):not(.level-f):not(.level-g):not(.level-h):not(.level-none) {
+  border-left: 3px solid #787878; /* 淺灰色 */
+  background: white;
+}
+
+.project-item.level-none {
+  border-left: 3px solid #808080;
+  background: white;
+}
+
+/* 添加子任務按鈕 */
+.add-subtask-btn {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.add-subtask-btn:hover {
+  background: #f0f0f0;
+  color: #52D0FF;
+}
+
+.project-item-header:hover .add-subtask-btn {
+  display: flex;
+}
+
+/* 右側內容區 - 對齊樹狀圖右側，左側間距 16px 與插入工具列間距一致 */
+.project-content {
+  flex: 1;
+  min-width: 0; /* 確保 flex 子項可正確縮放 */
+  padding: 16px 30px 30px 16px; /* 頂部 16px 縮小空白區域 */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+}
+
+.project-welcome {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 1600px; /* 提升到 1600px */
+}
+
+.project-welcome h2 {
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.level-guide {
+  margin-top: 30px;
+  text-align: left;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+.level-guide h3 {
+  margin-bottom: 10px;
+}
+
+.level-guide ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.level-guide li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* 任務詳情樣式 */
+.task-details {
+  padding: 24px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 1600px; /* 提升到 1600px */
+}
+
+.task-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.task-title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-title-section h2 {
+  margin: 0;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  color: #666;
+  position: relative;
+}
+
+.action-btn:hover {
+  background: #f5f6f8;
+}
+
+.edit-btn:hover {
+  color: #52D0FF;
+}
+
+.delete-btn:hover {
+  color: #ff4d4d;
+}
+
+/* 任務操作按鈕的工具提示 */
+.action-btn::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+.task-status {
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+}
+
+.header-progress-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid #E8EDF2;
+  background: #ffffff;
+  color: #9E9E9E;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-progress-btn.enabled {
+  background: #52D0FF;
+  color: #ffffff;
+  border-color: #52D0FF;
+}
+
+.header-progress-btn.disabled {
+  background: #ffffff;
+  color: #9E9E9E;
+  border-color: #E8EDF2;
+}
+
+.header-progress-btn:hover {
+  opacity: 0.9;
+}
+
+.status-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.status-btn svg {
+  font-size: 1.2em;
+}
+
+.status-btn.active {
+  background: #52D0FF;
+  color: white;
+  border-color: #52D0FF;
+  transform: scale(1.05);
+}
+.status-btn.pending {
+  background: #52D0FF;
+  color: #fff;
+  border: 1px solid #52D0FF;
+}
+.status-btn.completed {
+  background: #aaa;
+  color: #fff;
+  border: 1px solid #aaa;
+}
+
+/* 舊的 task-description 樣式已移除，使用下面的新樣式 */
+
+.task-description h3 {
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.task-meta {
+  color: #666;
+  font-size: 0.9em;
+}
+
+/* 編輯表單樣式 */
+.task-edit {
+  padding: 24px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 800px; /* 設置最大寬度 */
+}
+
+.edit-form {
+  margin-top: 20px;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.cancel-btn, .save-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background: white;
+  border: 1px solid #ddd;
+}
+
+.save-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+}
+
+.save-btn:hover {
+  background: #47b8e0;
+}
+
+/* 彈窗樣式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90%;
+  animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.form-info {
+  margin-top: 16px;
+  padding: 10px;
+  background: #f8f8f8;
+  border-radius: 4px;
+  color: #666;
+  font-size: 14px;
+}
+
+.error-message {
+  color: #ff4d4d;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-btn, .submit-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background: white;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.cancel-btn:hover {
+  background: #f5f5f5;
+}
+
+.submit-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+}
+
+.submit-btn:hover {
+  background: #47b8e0;
+}
+
+/* 加載中狀態 */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.loading-spinner::after {
+  content: '';
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #52D0FF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* 動畫 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.root-drop-zone.hidden {
+  display: none;
+}
+
+.root-drop-zone.visible {
+  display: block;
+}
+
+.root-drop-zone.hidden {
+  display: none;
+}
+
+.root-drop-zone.visible {
+  display: block;
+}
+
+.notifications-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.countdown-timer {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.custom-notification {
+  background: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 300px;
+  animation: slideIn 0.3s ease-out;
+  min-height: 60px; /* 增加一點高度以容納兩行文字 */
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-icon {
+  color: #52D0FF;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 18px;
+}
+
+.notification-close:hover {
+  color: #ff4d4d;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.progress-container {
+  flex: 1;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  margin: 0 10px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #52D0FF;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.task-icon-small {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.task-icon-small img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.task-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.task-description {
+  margin: 0; /* 完全移除 margin，由 layout-item 統一控制 */
+  padding: 0;
+}
+
+.editor-container {
+  margin-top: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: white;
+  position: relative;
+  z-index: 1;
+  /* 添加硬件加速 */
+  transform: translateZ(0);
+  will-change: transform;
+  overflow: hidden; /* 確保內容不會溢出 */
+}
+
+.editor-container .ql-container {
+  min-height: 150px;  /* 減少最小高度 */
+  max-height: 400px;  /* 添加最大高度 */
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.editor-container .ql-editor {
+  min-height: 150px;
+  padding: 12px 15px;
+  /* 優化滾動性能 */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 減少動畫效果 */
+.editor-container .ql-toolbar button {
+  transition: none;
+}
+
+/* 確保編輯器可以獲得焦點 */
+.editor-container .ql-editor:focus {
+  outline: none;
+  border: none;
+}
+
+/* 項目管理頁面專用工具欄樣式 - 與首頁ABCD任務彈出視窗一致 */
+.project-container .editor-container .ql-toolbar {
+  border: 1px solid #E8EDF2 !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0 !important;
+  background: #f8f9fa !important;
+  padding: 8px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  overflow: visible !important;
+  white-space: nowrap !important;
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+/* 任務描述工具列：預設隱藏，點進編輯區才顯示 */
+.project-container .editor-container .ql-toolbar {
+  display: none !important;
+}
+
+.project-container .editor-container:focus-within .ql-toolbar {
+  display: flex !important;
+}
+
+.project-container .editor-container .ql-toolbar .ql-formats {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin: 0 !important;
+  flex-wrap: nowrap !important;
+  flex: 0 0 auto !important;
+}
+
+.project-container .editor-container .ql-toolbar .ql-formats:first-child {
+  justify-content: flex-start !important;
+}
+
+.project-container .editor-container .ql-toolbar .ql-formats:last-child {
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+}
+
+.project-container .editor-container .ql-toolbar button {
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid #E8EDF2 !important;
+  border-radius: 4px !important;
+  background: white !important;
+  color: #B0B3B8 !important;
+  font-size: 12px !important;
+  font-weight: normal !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.project-container .editor-container .ql-toolbar button:hover {
+  background: #52D0FF !important;
+  color: white !important;
+  border-color: #52D0FF !important;
+}
+
+.project-container .editor-container .ql-toolbar button.ql-active {
+  background: #52D0FF !important;
+  color: white !important;
+  border-color: #52D0FF !important;
+}
+
+.project-container .editor-container .ql-toolbar .ql-picker {
+  height: 28px !important;
+  border: 1px solid #E8EDF2 !important;
+  border-radius: 4px !important;
+  background: white !important;
+  color: #B0B3B8 !important;
+  font-size: 12px !important;
+  margin: 0 !important;
+}
+
+.project-container .editor-container .ql-toolbar .ql-picker-label {
+  padding: 4px 8px !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.project-container .editor-container .ql-toolbar .ql-picker-options {
+  border: 1px solid #E8EDF2 !important;
+  border-radius: 4px !important;
+  background: white !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  z-index: 50 !important;
+}
+
+/* 避免下拉選單被編輯器容器裁切 */
+.project-container .editor-container {
+  overflow: visible !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* 顏色 / 底色按鈕：放大圖示並移除外框，避免看起來過小 */
+.project-container .editor-container .ql-toolbar .ql-picker.ql-color,
+.project-container .editor-container .ql-toolbar .ql-picker.ql-background {
+  width: 28px !important;
+  min-width: 28px !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.project-container .editor-container .ql-toolbar .ql-picker.ql-color .ql-picker-label,
+.project-container .editor-container .ql-toolbar .ql-picker.ql-background .ql-picker-label {
+  width: 28px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  border: none !important;
+}
+
+.project-container .editor-container .ql-toolbar .ql-picker.ql-color .ql-picker-label svg,
+.project-container .editor-container .ql-toolbar .ql-picker.ql-background .ql-picker-label svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.project-container .editor-container .ql-container {
+  border: 1px solid #E8EDF2 !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+}
+
+.project-container .editor-container:focus-within .ql-container {
+  border-radius: 0 0 8px 8px !important;
+}
+
+.project-container .editor-container .ql-editor.ql-blank::before {
+  color: #B0B3B8 !important;
+  font-style: italic !important;
+  content: attr(data-placeholder) !important;
+}
+
+/* 連結 tooltip 修正：
+   1) 讓 ql-container 不裁切浮層
+   2) 把捲動交給 ql-editor
+   3) tooltip 開啟時維持工具列顯示，避免點 Save 當下收起 */
+.project-container .editor-container .ql-container {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 2 !important;
+  min-height: 90px !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+.project-container .editor-container .ql-editor {
+  min-height: 90px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+.project-container .editor-container .ql-tooltip {
+  z-index: 9999 !important;
+}
+
+.project-container .editor-container:has(.ql-tooltip:not(.ql-hidden)) .ql-toolbar {
+  display: flex !important;
+}
+
+/* 標題按鈕區域 */
+.header-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.template-btn:hover {
+  background: #3BB8E6;
+  transform: translateY(-1px);
+}
+
+/* 模板模態框樣式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E8EDF2;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #71798B;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #f0f2f5;
+  color: #333;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.template-section {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.template-section h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.template-selector {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.template-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #E8EDF2;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+
+.apply-template-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.apply-template-btn:hover {
+  background: #3BB8E6;
+}
+
+.template-preview {
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #E8EDF2;
+}
+
+.template-preview h5 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.template-preview p {
+  margin: 4px 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.save-template-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-template-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.save-template-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.template-hint {
+  margin: 8px 0 0 0;
+  color: #6c757d;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* 子任務清單樣式 */
+.subtasks-list {
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.subtasks-list h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+/* 修改子任務容器為網格布局 */
+.subtasks-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 兩欄布局 */
+  gap: 12px;  /* 格子之間的間距 */
+}
+
+/* 調整子任務項目的寬度 */
+.subtask-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+  /* 移除之前可能存在的 margin */
+  margin: 0;
+}
+
+.subtask-item:hover {
+  border-color: #bbb;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.subtask-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.subtask-icon img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.subtask-title {
+  flex: 1;
+  font-size: 0.95em;
+  color: #666;
+  transition: color 0.2s ease;
+  white-space: nowrap;        /* 防止文字換行 */
+  overflow: hidden;           /* 隱藏超出部分 */
+  text-overflow: ellipsis;    /* 顯示省略號 */
+  margin-right: 8px;         /* 給狀態按鈕留出空間 */
+}
+
+.subtask-item.completed .subtask-title {
+  color: #1976d2;
+}
+
+.status-toggle {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.status-toggle:hover {
+  color: #1976d2;
+  transform: scale(1.1);
+}
+
+.status-toggle.completed {
+  color: #1976d2;
+}
+
+.subtask-item.completed {
+  background: #f8f9fa;
+}
+
+/* 編輯輸入框樣式 */
+.task-title-edit,
+.project-title-edit {
+  background: white;
+  border: 2px solid #52D0FF;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: inherit;
+  font-weight: inherit;
+  color: #333;
+  outline: none;
+  min-width: 100px;
+}
+
+.task-title-edit {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.project-title-edit {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* 布局編輯系統樣式 */
+.layout-control {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e1e5e9;
+  background: #f8f9fa;
+}
+
+.layout-edit-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.layout-edit-btn:hover {
+  background: #4BC0EF;
+  transform: translateY(-1px);
+}
+
+.layout-edit-btn.active {
+  background: #FF6B6B;
+}
+
+.layout-edit-btn.active:hover {
+  background: #FF5252;
+}
+
+/* 任務詳細頁面容器 */
+.task-details-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  overflow: visible; /* 確保內容不會被裁剪 */
+}
+
+.task-details-container.editing-mode {
+  border: 2px dashed #52D0FF;
+  background: #f0f8ff;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+/* 任務內容布局（水平布局：左側任務詳細 + 右側工具列） */
+.task-content-layout {
+  display: flex;
+  flex: 1;
+  gap: 16px;
+  min-height: fit-content; /* 確保背景能包含所有內容 */
+  align-items: flex-start; /* 對齊到頂部 */
+}
+
+/* 固定左側主內容區寬度：配合工具列（250px / 48px 收合） */
+.task-content-layout > .task-details {
+  flex: 0 0 calc(100% - 266px); /* 250px 工具列 + 16px gap */
+  width: calc(100% - 266px);
+  max-width: calc(100% - 266px);
+}
+
+.task-content-layout.toolbar-collapsed > .task-details {
+  flex: 0 0 calc(100% - 64px); /* 48px 工具列 + 16px gap */
+  width: calc(100% - 64px);
+  max-width: calc(100% - 64px);
+}
+
+/* 左側任務詳細內容（紫框區域） */
+.task-details {
+  flex: 1;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e1e5e9;
+  display: flow-root; /* 防止 margin collapse */
+  overflow: visible; /* 確保內容不會被裁剪 */
+  min-height: fit-content; /* 確保背景能包含所有內容 */
+}
+
+/* 統一五個分頁容器高度，避免切換時視覺大小跳動 */
+.task-tab-content > .task-details {
+  min-height: 70vh;
+}
+
+.editing-mode .task-details {
+  border: 2px solid #9c27b0;
+  background: #fce4ec;
+}
+
+/* 右側插入工具列（綠框區域） */
+.insert-toolbar {
+  width: 250px;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.editing-mode .insert-toolbar {
+  border: 2px solid #4caf50;
+  background: #e8f5e8;
+}
+
+.insert-toolbar.collapsed {
+  width: 48px;
+}
+
+.toolbar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e1e5e9;
+  background: white;
+}
+
+.toolbar-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.collapsed .toolbar-header h4 {
+  display: none;
+}
+
+.collapse-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.collapse-btn:hover {
+  background: #e9ecef;
+}
+
+.toolbar-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.tool-btn:hover {
+  background: #52D0FF;
+  color: white;
+  border-color: #52D0FF;
+  transform: translateX(2px);
+}
+
+/* 編輯模式下的拖拽提示 */
+.editing-mode .tool-btn {
+  cursor: grab;
+  border-style: dashed;
+}
+
+.editing-mode .tool-btn:hover {
+  border-color: #52D0FF;
+  background: #e3f2fd;
+  color: #333;
+}
+
+/* 布局項目樣式 */
+.layout-item {
+  margin: 16px 0;
+  transition: all 0.2s ease;
+}
+
+.layout-item[data-layout-id="task-header"] {
+  margin: 8px 0 4px;
+}
+
+.layout-item[data-layout-id="task-properties"] {
+  margin: 4px 0 8px;
+}
+
+.layout-item[data-layout-id="start-date"] {
+  margin-top: 12px;
+  margin-bottom: 18px;
+}
+
+.layout-item[data-layout-id="repeat-settings"] {
+  margin-bottom: 12px;
+}
+
+.layout-item[data-layout-id="repeat-logs"] {
+  margin-top: 12px;
+}
+
+/* 任務描述區域 - 使用固定間距，避免 margin collapse */
+.layout-item[data-layout-id="description"] {
+  margin-top: 16px !important; /* 覆蓋基礎樣式 */
+  margin-bottom: 24px !important; /* 固定底部間距 */
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 0;
+  border: none;
+  position: relative;
+  z-index: 1;
+  display: block; /* 確保是塊級元素 */
+  overflow: visible; /* 防止 margin collapse */
+}
+
+/* 確保任務描述內部容器不會影響間距 */
+.layout-item[data-layout-id="description"] .task-description {
+  margin: 0 !important;
+  padding: 0;
+}
+
+/* 確保編輯器容器不會溢出影響間距 */
+.layout-item[data-layout-id="description"] .editor-container {
+  margin: 0 !important;
+  padding: 0;
+}
+
+/* 膠囊區域 - 使用固定間距，避免 margin collapse */
+.layout-item[data-layout-id="capsules"] {
+  margin-top: 24px !important; /* 固定頂部間距，與描述區域的 margin-bottom 相加 = 48px 總間距 */
+  margin-bottom: 16px !important; /* 覆蓋基礎樣式 */
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 0;
+  border: none;
+  clear: both; /* 確保不與上方元素重疊 */
+  position: relative;
+  z-index: 2;
+  display: block; /* 確保是塊級元素 */
+  overflow: visible; /* 防止 margin collapse */
+}
+
+.layout-item.draggable-item {
+  border: 2px dashed #ccc;
+  border-radius: 6px;
+  padding: 8px;
+  background: white;
+  cursor: grab;
+  position: relative;
+}
+
+.layout-item.draggable-item:hover {
+  border-color: #52D0FF;
+  background: #f0f8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(82, 208, 255, 0.2);
+}
+
+.layout-item.draggable-item:active {
+  cursor: grabbing;
+  transform: rotate(2deg);
+}
+
+/* 拖拽時的樣式 */
+.layout-item.draggable-item.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+  z-index: 1000;
+}
+
+/* 拖拽目標區域 */
+.layout-item.draggable-item.drag-over {
+  border-color: #52D0FF;
+  background: #e3f2fd;
+  border-style: solid;
+}
+
+/* 文字膠囊組件樣式 */
+.capsule-section {
+  background: transparent; /* 移除背景色 */
+  border: none; /* 移除藍色邊框 */
+  padding: 16px 0; /* 調整padding */
+  margin: 0; /* 移除 margin，由 layout-item 控制 */
+  clear: both; /* 確保不與上方元素重疊 */
+  position: relative; /* 確保定位正確 */
+  z-index: 2; /* 確保在編輯器之上 */
+  display: block; /* 確保是塊級元素 */
+}
+
+.capsule-title {
+  margin: 0 0 16px 0;
+  color: #52D0FF;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.capsule-title:hover {
+  color: #4BC0EF;
+}
+
+/* 標題區域布局 */
+.capsule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.capsule-title-edit {
+  flex: 1;
+  margin: 0;
+  padding: 6px 10px;
+  border: 2px solid #52D0FF;
+  border-radius: 4px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #52D0FF;
+  background: white;
+  outline: none;
+}
+
+/* 右邊的新增膠囊按鈕 - 純文字樣式 */
+.add-capsule-text-btn {
+  background: none;
+  border: none;
+  color: #52D0FF;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-capsule-text-btn:hover {
+  color: #4BC0EF;
+  text-decoration: underline;
+}
+
+/* 佔位符控制選項樣式 */
+.placeholder-control {
+  margin: 12px 0;
+  padding: 8px 0;
+}
+
+.placeholder-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  user-select: none;
+}
+
+.placeholder-checkbox input[type="checkbox"] {
+  margin-right: 8px;
+  transform: scale(1.1);
+}
+
+.placeholder-checkbox:hover {
+  color: #52D0FF;
+}
+
+/* 佔位符任務樣式 */
+.placeholder-task {
+  opacity: 0.7;
+  background-color: rgba(245, 245, 245, 0.3) !important;
+  border-left: 3px dashed #ccc !important;
+}
+
+.placeholder-task .project-item-header {
+  background-color: rgba(245, 245, 245, 0.5) !important;
+  color: #999 !important;
+  font-style: italic !important;
+}
+
+.placeholder-task .project-title {
+  color: #999 !important;
+  font-style: italic !important;
+  font-weight: normal !important;
+}
+
+.placeholder-task:hover {
+  background-color: rgba(245, 245, 245, 0.6) !important;
+}
+
+/* 佔位符標題指示器樣式 */
+.placeholder-header-task {
+  opacity: 0.8;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 4px 0 !important;
+  margin: 8px 0 4px 0 !important;
+}
+
+.placeholder-header-task .project-item-header {
+  background-color: transparent !important;
+  color: #999 !important;
+  font-size: 14px !important;
+  font-weight: normal !important;
+  padding: 4px 8px !important;
+  border: none !important;
+}
+
+.placeholder-header-task .project-title {
+  color: #999 !important;
+  font-size: 14px !important;
+  font-weight: normal !important;
+  font-style: italic !important;
+}
+
+.placeholder-header-task .task-check,
+.placeholder-header-task .task-delete,
+.placeholder-header-task .task-expand,
+.placeholder-header-task .expand-icon {
+  display: none !important;
+}
+
+/* 任務關聯高亮效果 */
+.task-highlighted {
+  background-color: rgba(128, 128, 128, 0.1) !important;
+  border-left: 3px solid #52D0FF !important;
+  transition: all 0.2s ease;
+}
+
+.task-highlighted:hover {
+  background-color: rgba(128, 128, 128, 0.15) !important;
+}
+
+/* 回到原任務連結樣式 */
+.back-to-original-link {
+  margin-bottom: 8px;
+}
+
+.back-link-text {
+  color: #52D0FF;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.back-link-text:hover {
+  background-color: rgba(82, 208, 255, 0.1);
+  color: #4BC0EF;
+  text-decoration: underline;
+}
+
+/* 任務標籤切換樣式 */
+.task-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.tab-button {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  color: #666;
+}
+
+.tab-button:hover {
+  color: #333;
+  background-color: #f5f5f5;
+}
+
+.tab-button.active {
+  color: #52D0FF;
+  border-bottom-color: #52D0FF;
+  background-color: #f8f9ff;
+}
+
+/* 任務概覽面板樣式 */
+.task-overview-panel {
+  padding: 16px;
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.overview-stats {
+  font-size: 14px;
+  color: #666;
+}
+
+.overview-search {
+  flex: 1;
+  max-width: 300px;
+  margin-left: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.overview-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filters select {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.filters button {
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.bulk-actions button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: white;
+  color: #8c9099;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.bulk-actions button:hover {
+  background-color: #f0f0f0;
+  color: #575a60;
+}
+
+.overview-table-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.overview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.overview-table th {
+  background-color: #f8f9fa;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.overview-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.overview-table tr:hover {
+  background-color: #f8f9ff;
+}
+
+.overview-table tr.selected {
+  background-color: #e3f2fd;
+}
+
+.task-name {
+  cursor: pointer;
+  color: #52D0FF;
+  text-decoration: none;
+  margin-left: 8px;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.task-name:hover {
+  text-decoration: underline;
+}
+
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  width: 24px;
+  height: 24px;
+}
+
+.level-badge.level-a {
+  background-color: #FF6B6B;
+}
+
+.level-badge.level-b {
+  background-color: #FFA94D;
+}
+
+.level-badge.level-c {
+  background-color: #4DABF7;
+}
+
+.level-badge.level-d {
+  background-color: #51CF66;
+}
+
+.status-button {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.status-button.completed {
+  background-color: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
+}
+
+.status-button.pending {
+  background-color: #fff3cd;
+  color: #856404;
+  border-color: #ffeaa7;
+}
+
+.status-button:hover {
+  opacity: 0.8;
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.priority-badge.priority-high {
+  background-color: rgba(255, 107, 107, 0.2);
+  color: #d63031;
+}
+
+.priority-badge.priority-medium {
+  background-color: rgba(255, 169, 77, 0.2);
+  color: #e17055;
+}
+
+.priority-badge.priority-low {
+  background-color: rgba(81, 207, 102, 0.2);
+  color: #00b894;
+}
+
+.due-date-button {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.due-date-button:hover {
+  background-color: #f0f0f0;
+}
+
+.breadcrumb {
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.breadcrumb-item {
+  cursor: pointer;
+  color: #52D0FF;
+  text-decoration: none;
+}
+
+.breadcrumb-item:hover {
+  text-decoration: underline;
+}
+
+/* 甘特圖面板樣式 */
+.gantt-panel {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+}
+
+/* 右鍵選單樣式 */
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+}
+
+.context-menu-content {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  min-width: 160px;
+}
+
+.context-menu-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.context-menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.context-menu-item:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.context-menu-item:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* 移動任務對話框樣式 */
+.move-search-container {
+  margin-bottom: 12px;
+}
+
+.move-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.move-search-input:focus {
+  border-color: #52D0FF;
+}
+
+.move-task-options {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-top: 12px;
+}
+
+.move-option {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Gap between level badge and task text block */
+}
+
+.move-option:hover {
+  background-color: #f8f9ff;
+}
+
+.task-text-block {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.move-option .task-title {
+  text-align: left;
+  font-weight: bold; /* Make title more prominent */
+}
+
+.move-option .task-path {
+  font-size: 12px;
+  color: #666;
+  margin-left: 0;
+  text-align: left;
+  padding-left: 0; /* Remove previous padding-left */
+}
+
+.move-option:last-child {
+  border-bottom: none;
+}
+
+/* 甘特圖樣式 */
+.gantt-panel {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+}
+
+.gantt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.gantt-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.gantt-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.gantt-zoom-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: white;
+  color: #8c9099;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.gantt-zoom-btn:hover {
+  background-color: #f0f0f0;
+  color: #575a60;
+}
+
+.gantt-zoom-btn.active {
+  background: #52D0FF;
+  color: white;
+}
+
+.chart-filter-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  border: 1px solid #b8c6d1;
+  border-radius: 3px;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+}
+
+.chart-filter-checkbox::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  transform: scale(0);
+  transform-origin: center;
+  transition: transform 0.12s ease-in-out;
+  background: #fff;
+  clip-path: polygon(14% 53%, 0 67%, 41% 100%, 100% 21%, 86% 7%, 40% 71%);
+}
+
+.chart-filter-checkbox:checked {
+  background: #52D0FF;
+  border-color: #52D0FF;
+}
+
+.chart-filter-checkbox:checked::before {
+  transform: scale(1);
+}
+
+.chart-filter-checkbox:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 任務屬性 includeInViews 勾選框：勾選時白勾勾 */
+.tag-include-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid #b8c6d1;
+  border-radius: 3px;
+  background: #fff;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.tag-include-checkbox::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  transform: scale(0);
+  transform-origin: center;
+  transition: transform 0.12s ease-in-out;
+  background: #fff;
+  clip-path: polygon(14% 53%, 0 67%, 41% 100%, 100% 21%, 86% 7%, 40% 71%);
+}
+.tag-include-checkbox:checked {
+  background: #52D0FF;
+  border-color: #52D0FF;
+}
+.tag-include-checkbox:checked::before {
+  transform: scale(1);
+}
+
+.gantt-container {
+  display: flex;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+  max-width: none;
+  height: 500px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* 日/週/月切換保持同一外框高度，避免頁面跳動 */
+.gantt-container.day-view {
+  height: 500px;
+  min-height: 500px;
+}
+
+/* 日視圖專用樣式 */
+.gantt-time-sidebar {
+  width: 300px;
+  background: #f8f9fa;
+  border-right: 1px solid #e0e0e0;
+}
+
+.gantt-tasks-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.gantt-tasks-header {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  min-height: 40px;
+}
+
+.gantt-task-header {
+  flex: 1;
+  padding: 8px 12px;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 150px;
+  background: white;
+}
+
+.gantt-tasks-content {
+  flex: 1;
+  display: flex;
+  position: relative;
+  min-height: 480px; /* 24小時 * 20px */
+}
+
+.gantt-task-row-container {
+  flex: 1;
+  position: relative;
+  border-right: 1px solid #f0f0f0;
+  min-width: 150px;
+}
+
+.gantt-sidebar {
+  width: 125px;
+  background: #f8f9fa;
+  border-right: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.gantt-sidebar-header {
+  padding: 12px 8px;
+  background: #e9ecef;
+  font-weight: bold;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.gantt-task-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px solid #f0f0f0;
+  height: 30px;
+  line-height: 30px;
+  gap: 4px;
+}
+
+/* 保持純展示，移除 hover 效果避免行高抖動 */
+
+.gantt-task-name {
+  font-size: 12px;
+  color: #333;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gantt-timeline {
+  /* 移除 flex: 1，使用固定寬度避免與標題區域不一致 */
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  min-width: 800px;
+  height: 100%;
+  position: relative;
+}
+
+/* 日視圖內容較高時在內層捲動，不改變整個頁面高度 */
+.gantt-container.day-view .gantt-timeline {
+  overflow-y: auto;
+}
+
+.gantt-timeline::-webkit-scrollbar {
+  height: 12px;
+}
+
+.gantt-timeline::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.gantt-timeline::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+.gantt-timeline::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.gantt-timeline-header {
+  display: flex;
+  background: #e9ecef;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.gantt-timeline-header-container {
+  display: flex;
+  flex-direction: column;
+  background: #e9ecef;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.gantt-year-row {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 11px;
+  font-weight: bold;
+  color: #666;
+}
+
+.gantt-weekday-row {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.gantt-weekday-cell {
+  width: 41px !important; /* 強制設定寬度 */
+  min-width: 41px;
+  box-sizing: border-box;
+  padding: 2px 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: bold;
+  color: #666;
+  border-right: 1px solid #e0e0e0;
+}
+
+.gantt-date-row {
+  display: flex;
+  background: #e9ecef;
+}
+
+.gantt-year-cell {
+  width: 41px !important; /* 強制設定寬度 */
+  min-width: 41px;
+  box-sizing: border-box;
+  padding: 2px 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: bold;
+  border-right: 1px solid #e0e0e0;
+  white-space: nowrap;
+  color: #666;
+}
+
+/* 月視圖的年份格子寬度 */
+.gantt-year-row .gantt-year-cell[style*="120px"] {
+  min-width: 41px;
+}
+
+.gantt-timeline-cell {
+  width: 41px !important; /* 強制設定寬度 */
+  min-width: 41px; /* 週視圖和月視圖都是41px */
+  box-sizing: border-box; /* 避免邊框把每格實際寬度撐大，導致累積偏移 */
+  padding: 0 0; /* 取消內距避免視覺左移 */
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  border-right: 1px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+.gantt-timeline-content {
+  position: relative;
+}
+
+/* 月份間隔垂直線 - 只在月視圖中顯示 */
+.month-view .gantt-timeline-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0px,
+    transparent 39px,
+    #e0e0e0 40px,
+    #e0e0e0 40px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gantt-task-bar-container {
+  position: relative;
+  height: 30px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.gantt-task-bar {
+  position: absolute;
+  top: 3px;
+  height: 24px;
+  box-sizing: border-box; /* 寬度包含內距，避免超出格線 */
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  user-select: none;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.gantt-task-bar[style*="cursor: pointer"] {
+  pointer-events: auto;
+}
+
+
+/* 日曆視圖樣式 */
+.calendar-panel {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  flex: 2; /* 擴寬兩倍，使用flex: 2 */
+}
+
+.calendar-view {
+  max-width: none; /* 移除寬度限制 */
+  width: 100%; /* 使用全部可用寬度 */
+  margin: 0 auto;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.calendar-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.calendar-nav-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.calendar-nav-btn:hover {
+  background: #3BB5E5;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* 等寬分配 */
+  gap: 1px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  overflow: visible; /* 改為 visible 以顯示跨越多個格子的任務條 */
+  width: 100%; /* 確保使用全部可用寬度 */
+  position: relative; /* 為絕對定位的任務條提供定位基準 */
+}
+
+.calendar-weekday {
+  background: #f5f5f5;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: bold;
+  color: #666;
+  font-size: 14px;
+}
+
+.calendar-day {
+  background: white;
+  height: 100px; /* 固定高度，確保每行高度一致，任務條位置計算準確 */
+  min-width: 90px; /* 最小寬度，讓格子適度變寬 */
+  padding: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+  overflow: visible; /* 允許任務條溢出顯示 */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box; /* 確保 padding 包含在高度內 */
+}
+
+.calendar-day:hover {
+  background: #f8f9fa;
+}
+
+.calendar-day.today {
+  background: #e3f2fd;
+}
+
+.calendar-day.has-tasks {
+  background: #fff3e0;
+}
+
+.calendar-day.empty {
+  background: #fafafa;
+  cursor: default;
+}
+
+.calendar-day-number {
+  font-weight: bold;
+  color: #333;
+  height: 28px; /* 固定高度，確保日期區域不會被任務條覆蓋 */
+  display: flex;
+  align-items: center;
+  flex-shrink: 0; /* 防止被壓縮 */
+  margin-bottom: 4px; /* 與任務條區域的間距 */
+}
+
+/* 任務條區域 - 獨立的 flex 區域 */
+.calendar-task-area {
+  flex: 1; /* 佔用剩餘空間 */
+  position: relative; /* 為絕對定位的任務條提供定位基準 */
+  min-height: 0; /* 允許 flex 子元素縮小 */
+}
+
+.calendar-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.calendar-task {
+  background: #52D0FF;
+  color: white;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 8.5em; /* 限制為8.5個中文字元寬度 */
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+/* 淡出效果 */
+.calendar-task::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 100%;
+  background: linear-gradient(to right, transparent, #52D0FF);
+  pointer-events: none;
+}
+
+.calendar-task.start::after {
+  background: linear-gradient(to right, transparent, #4CAF50);
+}
+
+.calendar-task.due::after {
+  background: linear-gradient(to right, transparent, #FF9800);
+}
+
+.calendar-task.high::after {
+  background: linear-gradient(to right, transparent, #f44336);
+}
+
+.calendar-task.medium::after {
+  background: linear-gradient(to right, transparent, #FF9800);
+}
+
+.calendar-task.low::after {
+  background: linear-gradient(to right, transparent, #4CAF50);
+}
+
+.calendar-task.more::after {
+  background: linear-gradient(to right, transparent, #9E9E9E);
+}
+
+/* 任務概覽日期時間按鈕樣式 - 統一使用 fake-input 樣式 */
+.overview-start-date,
+.overview-start-time,
+.overview-due-date,
+.overview-due-time {
+  /* 繼承 fake-input 的基礎樣式 */
+  padding: 8px 10px; /* 縮小 padding 讓內容有更多空間 */
+  border: 1px solid #E8EDF2;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px; /* 縮小字體避免換行 */
+  color: #333;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  white-space: nowrap; /* 防止換行 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overview-start-date:hover,
+.overview-start-time:hover,
+.overview-due-date:hover,
+.overview-due-time:hover {
+  background: #f8f9fa;
+  border-color: #52D0FF;
+}
+
+/* placeholder 狀態 */
+.overview-start-date.is-placeholder,
+.overview-due-date.is-placeholder {
+  color: #999;
+}
+
+.date-fake-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.visually-hidden-date {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.calendar-task:hover {
+  background: #3BB5E5;
+}
+
+.calendar-task.start {
+  background: #4CAF50;
+}
+
+.calendar-task.due {
+  background: #FF9800;
+}
+
+.calendar-task.high {
+  background: #f44336;
+}
+
+.calendar-task.medium {
+  background: #FF9800;
+}
+
+.calendar-task.low {
+  background: #4CAF50;
+}
+
+.calendar-task.more {
+  background: #9E9E9E;
+  font-style: italic;
+}
+
+/* 日曆連續任務條樣式 */
+.calendar-task-bar {
+  position: absolute;
+  z-index: 10;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.calendar-task-bar:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+
+.gantt-task-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255,255,255,0.3);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.gantt-task-title {
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  z-index: 1;
+  position: relative;
+}
+
+/* 直式任務名稱樣式 */
+.task-title-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  white-space: normal !important;
+  line-height: 1;
+  height: 100%;
+}
+
+.vertical-char {
+  display: block;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  font-size: 10px;
+}
+
+.move-option .task-title {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.move-option .task-path {
+  font-size: 12px;
+  color: #666;
+  opacity: 0.8;
+}
+
+/* 生成任務的特殊標識 */
+.project-item.generated-task {
+  position: relative;
+}
+
+.project-item.generated-task::before {
+  content: "🔗";
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #52D0FF;
+  font-size: 12px;
+  z-index: 1;
+}
+
+.target-selector {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.target-selector label {
+  display: inline-block;
+  margin: 0;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.target-selector select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.capsules-container {
+  margin-bottom: 16px;
+}
+
+/* 膠囊網格佈局 - 3個一排 */
+.capsules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .capsules-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .capsules-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 膠囊樣式 - 類似圖片中的白色膠囊 */
+.capsule-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px; /* 膠囊形狀 */
+  padding: 8px 28px 8px 16px; /* 右側留適當空間給X按鈕 */
+  font-size: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  min-height: 36px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.capsule-pill:hover {
+  border-color: #e0e0e0; /* 保持邊框顏色不變 */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+
+
+.capsule-text {
+  flex: 1;
+  cursor: pointer;
+  color: #333;
+  user-select: none;
+}
+
+.capsule-text:empty::before {
+  content: '點擊編輯...';
+  color: #999;
+}
+
+/* 膠囊編輯輸入框 */
+.capsule-edit-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #333;
+  width: 100%;
+  padding: 0;
+}
+
+/* 膠囊右邊中間的X按鈕 - 重置所有默認樣式 */
+.capsule-remove-btn {
+  /* 重置瀏覽器默認樣式 */
+  all: unset !important;
+  
+  /* 自定義樣式 */
+  position: absolute !important;
+  top: 50% !important;
+  right: 6px !important;
+  transform: translateY(-50%) !important;
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  background: white !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 3px !important;
+  cursor: pointer !important;
+  font-size: 11px !important;
+  font-family: inherit !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* 當滑鼠懸停膠囊時，X按鈕變紅色正方形 */
+.capsule-pill:hover .capsule-remove-btn,
+.capsule-pill:hover .capsule-x-button {
+  background: #ff4444 !important;
+  color: white !important;
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  border: none !important;
+  border-radius: 3px !important;
+}
+
+.add-capsule-btn {
+  width: 100%;
+  padding: 10px;
+  background: #e3f2fd;
+  border: 2px dashed #52D0FF;
+  border-radius: 6px;
+  color: #52D0FF;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.add-capsule-btn:hover {
+  background: #52D0FF;
+  color: white;
+  border-style: solid;
+}
+
+.capsule-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.generation-status {
+  display: flex;
+  justify-content: center;
+}
+
+.status-indicator {
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status-indicator.generated {
+  background: #e8f5e8;
+  color: #4caf50;
+  border: 1px solid #4caf50;
+}
+
+.status-indicator.not-generated {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* 一鍵清除按鈕樣式 */
+.clear-all-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.clear-all-btn:hover {
+  background: #ff5252;
+  transform: translateY(-1px);
+}
+
+.generate-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background 0.2s ease;
+}
+
+.generate-btn:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.generate-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.close-capsules-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.close-capsules-btn:hover {
+  background: #5a6268;
+}
+
+/* 響應式設計 */
+@media (max-width: 1024px) {
+  .task-content-layout {
+    flex-direction: column;
+  }
+
+  .task-content-layout > .task-details,
+  .task-content-layout.toolbar-collapsed > .task-details {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+  }
+  
+  .insert-toolbar {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #e1e5e9;
+  }
+  
+  .insert-toolbar.collapsed {
+    width: 100%;
+    height: 60px;
+    overflow: hidden;
+  }
+
+  .capsule-actions {
+    flex-direction: column;
+  }
+}
+
+/* 日視圖樣式 */
+.day-view-header .gantt-task-header-row {
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  min-height: 50px;
+}
+
+.gantt-time-label-cell {
+  min-width: 80px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  border-right: 1px solid #e0e0e0;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gantt-task-header-cell {
+  min-width: 41px;
+  box-sizing: border-box;
+  padding: 12px 4px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  border-right: 1px solid #e0e0e0;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.gantt-task-header-cell:hover {
+  background-color: #f0f0f0;
+}
+
+.day-view-time-row {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  min-height: 30px;
+  height: 30px;
+}
+
+.day-view-time-row:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.day-view-time-row:nth-child(odd) {
+  background: #ffffff;
+}
+
+.day-view-task-cell {
+  min-width: 41px;
+  box-sizing: border-box;
+  border-right: 1px solid #e0e0e0;
+  position: relative;
+  overflow: visible;
+}
+
+.day-task-bar {
+  position: absolute;
+  left: 0;
+  width: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 15; /* 提高z-index確保覆蓋邊框 */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+  /* 讓任務條能夠跨越時間槽邊框 */
+  overflow: visible;
+}
+
+.day-task-bar:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* 任務名稱省略淡出 */
+.task-title-truncated {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,1) 70%, rgba(255,255,255,0) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* 日視圖控制按鈕 */
+.day-view-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 16px;
+}
+
+/* 行高控制 */
+.row-height-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+}
+
+.row-height-control label {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.row-height-slider {
+  width: 80px;
+  height: 4px;
+  background: #ddd;
+  outline: none;
+  border-radius: 2px;
+  -webkit-appearance: none;
+}
+
+.row-height-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #52D0FF;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.row-height-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #52D0FF;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.row-height-value {
+  font-size: 12px;
+  color: #666;
+  min-width: 35px;
+  text-align: right;
+}
+
+/* 欄寬控制 (與行高控制相同的樣式) */
+.column-width-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
+}
+
+.column-width-control label {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.column-width-slider {
+  width: 80px;
+  height: 4px;
+  background: #ddd;
+  outline: none;
+  border-radius: 2px;
+  -webkit-appearance: none;
+}
+
+.column-width-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #52D0FF;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.column-width-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #52D0FF;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.column-width-value {
+  font-size: 12px;
+  color: #666;
+  min-width: 35px;
+  text-align: right;
+}
+
+.date-picker-btn {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.date-picker-btn:hover {
+  background: #f5f5f5;
+}
+
+
+/* 直接日期輸入框 */
+.date-input-direct {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 140px;
+}
+
+.date-input-direct:hover {
+  border-color: #ccc;
+}
+
+.date-input-direct:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* 懸停視窗樣式 */
+.task-hover-tooltip {
+  position: fixed;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.tooltip-content {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  width: 240px;
+  height: 120px;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.tooltip-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tooltip-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tooltip-icon img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.tooltip-info {
+  flex: 1;
+  text-align: left;
+}
+
+.tooltip-title {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.tooltip-date {
+  color: #666;
+  font-size: 11px;
+  text-align: left;
+}
+
+.tooltip-description {
+  color: #555;
+  font-size: 11px;
+  line-height: 1.3;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+  text-align: left;
+}
+
+.tooltip-description img {
+  max-width: 240px;
+  max-height: 120px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.group-header label {
+  margin: 0;
+  font-weight: 500;
+}
+
+.group-header .link-add-btn {
+  margin: 0;
+}
+
+.reminder-section {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 8px 0;
+}
+
+.reminder-section .reminder-list {
+  margin: 0;
+}
+
+.reminder-section .no-reminders {
+  display: inline-block;
+  padding: 8px 0;
+}
+

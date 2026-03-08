@@ -1,0 +1,2413 @@
+/* 基礎布局 */
+.home-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: #f5f5f5;
+}
+
+/* Header 區域 - 左右並排：左側 ID/進度條，右側大頭貼 */
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 20px;
+  padding-left: 60px; /* 避免被左上角設定按鈕擋住 */
+  padding-right: 70px; /* 避免被右側設定按鈕擋住 */
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-user-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.username {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.level {
+  font-size: 14px;
+  color: #52D0FF;
+  background-color: rgba(82, 208, 255, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* 進度條 - 左側區塊可佔滿，不再受大頭貼限制 */
+.progress-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.progress-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar-clickable {
+  cursor: pointer;
+}
+
+.progress-bar-clickable:hover {
+  opacity: 0.85;
+}
+
+.progress-bar-label {
+  font-size: 13px;
+  color: #666;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.progress-bar-track {
+  flex: 1;
+  height: 8px;
+  background-color: #E8EDF2;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+
+.progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-bar.blue { background-color: #52D0FF; }
+.progress-bar.orange { background-color: #FF9800; }
+
+/* 進度任務彈窗 */
+.progress-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10002;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.progress-popup {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 360px;
+  width: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.progress-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.progress-popup-body {
+  overflow-y: auto;
+}
+
+/* 頭像（角色）- 右側，方形，預設為角色圖示 */
+.avatar-container {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.avatar-character {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  background-color: #E8EDF2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-character.has-avatar {
+  background-color: transparent;
+}
+
+.avatar-character-icon {
+  font-size: 36px;
+  color: #52D0FF;
+}
+
+/* 側邊按鈕 */
+.side-buttons {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
+.side-buttons button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background-color: white;
+  color: #71798B;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.side-buttons button:hover {
+  transform: scale(1.1);
+  color: #52D0FF;
+}
+
+/* 總覽設定面板 */
+.overview-settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10001;
+}
+
+.overview-settings-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.overview-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #E8EDF2;
+}
+
+.overview-settings-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.overview-settings-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.overview-settings-close:hover {
+  color: #333;
+}
+
+.overview-settings-body {
+  padding: 20px;
+}
+
+.overview-settings-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
+.overview-settings-section .form-group {
+  margin-bottom: 16px;
+}
+
+.overview-settings-section .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #555;
+}
+
+.overview-settings-section .form-group input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #E1E5E9;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.overview-settings-section .form-group input:focus {
+  outline: none;
+  border-color: #52D0FF;
+}
+
+.avatar-upload-group label:first-child {
+  margin-bottom: 8px;
+}
+
+.avatar-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background-color: #E8EDF2;
+  flex-shrink: 0;
+}
+
+.avatar-upload-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.avatar-upload-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  background: #52D0FF;
+  color: white;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s;
+}
+
+.avatar-upload-btn:hover {
+  background: #3db8e8;
+}
+
+.avatar-remove-btn {
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+}
+
+.avatar-remove-btn:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+/* 任務列表容器 */
+.task-list {
+  height: calc(100% - 20px);  /* 減去padding */
+  padding: 2px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: none;  /* 移除最大高度限制 */
+}
+
+/* 新任務輸入 */
+.new-task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid #E8EDF2;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 2;
+}
+
+.task-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  color: #333;
+  padding: 8px;
+}
+
+.task-input::placeholder {
+  color: #A0A0A0;
+}
+
+/* 任務項目 */
+/* 便條紙任務條：與本日任務清單樣式一致 */
+.note-section .task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #fff;
+  border: 1px solid #e8edf2;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.note-section .task:last-of-type {
+  margin-bottom: 0;
+}
+
+/* 便條紙任務 2 欄網格（參考子任務清單） */
+.note-tasks-grid .task {
+  margin-bottom: 0;
+}
+
+.note-section .task:hover {
+  background-color: #fff;
+}
+
+/* 便條紙任務 checkbox：與本日任務清單一致 */
+.note-section .task-check {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  border-radius: 4px;
+  border: 2px solid #cfd8dc;
+  background: #fff;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0;
+}
+
+.note-section .task-check:hover {
+  border-color: #52D0FF;
+  background: rgba(82, 208, 255, 0.2);
+}
+
+.note-section .task-completed .task-check {
+  background: #52D0FF;
+  border-color: #52D0FF;
+  color: #fff;
+}
+
+.note-section .note-task-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.note-section .note-task-countdown {
+  font-size: 11px;
+  color: #52D0FF;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+.note-section .note-task-countdown.overdue {
+  color: #ff6b6b;
+}
+
+.note-section .task-text {
+  font-size: 13px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.note-section .task-text:hover {
+  background: transparent;
+}
+
+.note-section .task-completed .task-text {
+  color: #999;
+  text-decoration: line-through;
+}
+
+/* 舊樣式保留給 completed-tasks 等 */
+.task {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid #E8EDF2;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.task:hover {
+  background-color: #f8f9fa;
+}
+
+.task-check {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 50%;
+  border: 2px solid #D1D4DC;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #D1D4DC;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.task-check:hover {
+  background-color: #52D0FF;
+  color: white;
+}
+
+.task-completed .task-check {
+  border-color: #52D0FF;
+  color: #52D0FF;
+  background-color: rgba(82, 208, 255, 0.1);
+}
+
+.new-task-check {
+  color: #D1D4DC;
+  border-color: #D1D4DC;
+}
+
+.task-text {
+  flex: 1;
+  color: #333;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.task-text:hover {
+  background-color: #f0f2f5;
+}
+
+.task-text-edit {
+  flex: 1;
+  border: 2px solid #52D0FF;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 16px;
+  color: #333;
+  outline: none;
+  background: white;
+}
+
+.task-completed .task-text {
+  color: #A0A0A0;
+  text-decoration: line-through;
+}
+
+/* 任務操作按鈕 */
+.task-delete {
+  opacity: 0;
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  font-size: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 6px;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task:hover .task-delete {
+  opacity: 1;
+}
+
+.task-delete:hover {
+  background-color: #52D0FF;
+  color: white;
+}
+
+/* 展開詳細設定時隱藏刪除按鈕 */
+.task:has(.task-details) .task-delete {
+  display: none;
+}
+
+.task-expand {
+  background: none;
+  border: none;
+  color: #52D0FF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 6px;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.task-expand:hover {
+  background-color: #52D0FF;
+  color: white;
+}
+
+.task-expand.expanded {
+  transform: rotate(180deg);
+}
+
+/* 便條紙任務詳細設定小彈出視窗 - 最高層級，壓暗整個畫面含左側按鈕 */
+.note-task-detail-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.note-task-detail-popup {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  max-width: 320px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.note-task-detail-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e1e5e9;
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+}
+
+.note-task-detail-popup-header button {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.note-task-detail-popup-header button:hover {
+  color: #333;
+}
+
+.note-task-detail-popup-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-task-detail-popup-body .form-group {
+  margin: 0;
+}
+
+.note-task-detail-popup-body .group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.note-task-detail-popup-body .group-header label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.note-task-detail-popup-body .date-time-row {
+  display: flex;
+  gap: 8px;
+}
+
+.note-task-detail-popup-body .date-fake-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.note-task-detail-popup-body .fake-input {
+  padding: 8px 10px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  background: white;
+}
+
+/* 截止日期/時間按鈕：與項目管理頁面一致 */
+.note-popup-datetime .note-due-date,
+.note-popup-datetime .note-due-time {
+  padding: 8px 10px;
+  border: 1px solid #E8EDF2;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  color: #333;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-popup-datetime .note-due-date:hover,
+.note-popup-datetime .note-due-time:hover {
+  background: #fff;
+  border-color: #E8EDF2;
+}
+
+.note-popup-datetime .note-due-date.is-placeholder {
+  color: #999;
+}
+
+.note-popup-datetime .date-fake-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-popup-datetime .note-due-time {
+  width: 100px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.note-task-detail-popup-body .input-with-icon.click-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-task-detail-popup-body .input-with-icon input {
+  padding: 8px 10px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.note-task-detail-popup-body input,
+.note-task-detail-popup-body select {
+  padding: 8px 10px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.note-task-detail-popup-body .reminder-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.note-task-detail-popup-body .reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.note-task-detail-popup-body .reminder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.note-task-detail-popup-body .reminder-item:hover {
+  background: #f8f9fa;
+}
+
+.note-task-detail-popup-body .link-add-btn {
+  background: none;
+  border: none;
+  color: #52D0FF;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.note-task-detail-popup-body .link-add-btn:hover {
+  background: none;
+}
+
+.note-task-detail-popup-body .no-reminders {
+  font-size: 13px;
+  color: #999;
+}
+
+.note-task-detail-popup-body .remove-reminder-btn {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.note-task-detail-popup-body .remove-reminder-btn:hover {
+  color: #ff6b6b;
+}
+
+/* 便條紙任務刪除確認彈窗 - 最高層級，壓暗整個畫面 */
+.note-task-delete-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.note-task-delete-popup {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  max-width: 280px;
+  width: 100%;
+}
+
+.note-task-delete-popup p {
+  margin: 0 0 16px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+.note-task-delete-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.note-task-delete-popup-actions button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid #e1e5e9;
+  background: white;
+  color: #333;
+}
+
+.note-task-delete-popup-actions button.delete-confirm {
+  background: #ff6b6b;
+  border-color: #ff6b6b;
+  color: white;
+}
+
+.note-task-delete-popup-actions button.delete-confirm:hover {
+  background: #ff5252;
+}
+
+/* 任務詳情 */
+.task-details {
+  margin-top: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 便條紙任務詳細設定的緊湊樣式 */
+.note-section .task-details {
+  margin-top: 4px;
+  padding: 18px;
+  gap: 3px;
+}
+
+.note-section .task-details .form-group {
+  margin-bottom: 3px;
+  margin-top: 8px;
+}
+
+.note-section .task-details .form-group:first-child {
+  margin-top: 0;
+}
+
+.note-section .task-details .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.note-section .task-details .group-header {
+  margin-bottom: 1px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 提前提醒標題與添加提醒按鈕下移，並設定灰色區域樣式 */
+.note-section .task-details .reminder-section {
+  margin-top: -4px;
+  gap: 3px !important;
+  padding: 8px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.note-section .task-details .group-header label {
+  margin-bottom: 0;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: left;
+}
+
+/* 單獨的標題樣式（沒有按鈕的標題） */
+.note-section .task-details .form-group > label {
+  display: block;
+  margin-bottom: 2px;
+  font-weight: bold;
+  text-align: left;
+  font-size: 14px;
+}
+
+.note-section .task-details .date-time-row {
+  gap: 4px;
+}
+
+
+.note-section .task-details .reminder-list {
+  gap: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 12px;
+}
+
+.note-section .task-details .reminder-item {
+  padding: 3px 6px;
+  min-width: 80px;
+  font-size: 14px;
+  border-radius: 4px;
+  align-self: flex-start;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.note-section .task-details input,
+.note-section .task-details select {
+  padding: 2px 4px;
+  font-size: 14px;
+  height: 20px;
+  border-radius: 3px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 地點和重複輸入框特殊樣式 */
+.note-section .task-details .form-group .group-header + input,
+.note-section .task-details .form-group .group-header + select {
+  width: 100%;
+  display: block;
+  margin-top: 2px;
+}
+
+/* 重複下拉選擇縮短到1/6寬度 */
+.note-section .task-details .form-group:has(label:contains("重複")) select {
+  width: calc(100% / 6);
+  min-width: 80px;
+}
+
+.note-section .task-details .fake-input {
+  padding: 2px 4px;
+  font-size: 14px;
+  border-radius: 3px;
+}
+
+.note-section .task-details .input-with-icon {
+  padding: 2px 4px;
+}
+
+.note-section .task-details .link-add-btn {
+  padding: 1px 4px;
+  font-size: 13px;
+  border-radius: 3px;
+}
+
+/* 提醒設置 */
+.reminder-settings {
+  margin-left: 20px;
+}
+
+.reminder-inputs {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.reminder-time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.reminder-value-input {
+  width: 60px;
+}
+
+.reminder-unit-select {
+  flex: 1;
+}
+
+/* 任務詳情覆蓋層 */
+.task-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.detail-item input,
+.detail-item select {
+  padding: 8px;
+  border: 1px solid #E8EDF2;
+  border-radius: 4px;
+  outline: none;
+  font-size: 14px;
+}
+
+/* 底部導航 */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 15px;
+  background-color: white;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+.bottom-nav button {
+  background: none;
+  border: none;
+  color: #71798B;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bottom-nav button:hover {
+  color: #52D0FF;
+  transform: translateY(-2px);
+}
+
+.project-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  color: #71798B;
+  font-size: 14px;
+}
+
+.project-btn svg {
+  font-size: 20px;
+  margin-bottom: 0;
+}
+
+.project-btn:hover {
+  color: #52D0FF;
+}
+
+@media (min-width: 1024px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
+/* 通知樣式 */
+.notifications-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.custom-notification {
+  background-color: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 300px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-icon {
+  color: #52D0FF;
+  font-size: 20px;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: #71798B;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.notification-close:hover {
+  color: #333;
+}
+
+/* 動畫 */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 已完成任務區域 */
+.completed-tasks-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #E8EDF2;
+}
+
+.completed-tasks-title {
+  color: #71798B;
+  font-size: 16px;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+/* 便條紙任務：輸入區與未完成任務之間留白 */
+.note-section .new-task {
+  margin-bottom: 20px;
+}
+
+/* 便條紙任務：未完成任務與中間分隔線的留白（僅未完成區，不影響已完成區） */
+.note-section .note-tasks-grid:not(.completed-tasks) {
+  margin-bottom: 20px;
+}
+
+.completed-tasks .task {
+  opacity: 0.85;
+}
+
+/* 已完成任務區也使用與本日任務一致的任務條樣式 */
+.completed-tasks .task {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #fff;
+  border: 1px solid #e8edf2;
+  border-radius: 6px;
+}
+
+.task-completed-time {
+  font-size: 12px;
+  color: #A0A0A0;
+  margin-left: auto;
+}
+
+/* 滾動條樣式 */
+.task-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.task-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.task-list::-webkit-scrollbar-thumb {
+  background: #D1D4DC;
+  border-radius: 2px;
+}
+
+/* 主內容區域布局 */
+.main-content {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  padding: 20px;
+  margin-bottom: 100px;
+  min-height: 0;
+  z-index: 1;
+}
+
+.home-container .main-content .note-section {
+  flex: 1;
+  background: white !important;
+  border-radius: 20px !important;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  min-height: 400px;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  z-index: 1;
+}
+
+.home-container .main-content .project-section {
+  flex: 1;
+  background: white !important;
+  border-radius: 20px !important;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  min-height: 400px;
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  z-index: 1;
+}
+
+.section-title {
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #E8EDF2;
+  text-align: left;
+}
+
+/* 便條紙任務區標題靠左 */
+.note-section .section-title {
+  text-align: left;
+}
+
+/* 项目管理任务样式 */
+.project-task-list {
+  width: 100%;
+}
+
+.project-section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.project-source-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-source-btn {
+  border: 1px solid #d6dde6;
+  background: #fff;
+  color: #5f6b7a;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.project-source-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 240px;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #d6dde6;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  z-index: 20;
+}
+
+.project-source-option {
+  width: 100%;
+  border: none;
+  background: #fff;
+  color: #333;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-source-option:hover {
+  background: #f3f7fb;
+}
+
+.project-source-option.active {
+  background: #eaf7ff;
+  color: #1f6f95;
+  font-weight: 600;
+}
+
+.project-source-check {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #cdd4de;
+  background: #fff;
+  color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.project-source-check.checked {
+  border-color: #52D0FF;
+  background: #52D0FF;
+  color: #fff;
+}
+
+.empty-project-tasks {
+  text-align: center;
+  padding: 40px 20px;
+  color: #71798B;
+}
+
+.go-to-projects-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+}
+
+.go-to-projects-btn:hover {
+  background: #3BB8E6;
+  transform: translateY(-2px);
+}
+
+.project-tasks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.project-tasks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.project-task {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid #E8EDF2;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.project-task:hover {
+  background: #f0f2f5;
+  border-left-color: #52D0FF;
+  transform: translateX(4px);
+}
+
+.project-task-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 15px;
+  border-left: 4px solid #E8EDF2;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.project-task-card:hover {
+  background: #f0f2f5;
+  border-left-color: #52D0FF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.task-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.task-card-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.task-card-status {
+  margin-bottom: 8px;
+}
+
+.task-card-due-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #71798B;
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.level-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.level-a {
+  background: #FF6B6B;
+}
+
+.level-b {
+  background: #4ECDC4;
+}
+
+.level-c {
+  background: #45B7D1;
+}
+
+.level-d {
+  background: #96CEB4;
+}
+
+.level-none {
+  background: #71798B;
+}
+
+.task-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.task-status {
+  margin-bottom: 8px;
+}
+
+.status-indicator {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-indicator.completed {
+  background: rgba(82, 208, 255, 0.1);
+  color: #52D0FF;
+}
+
+.status-indicator.pending {
+  background: rgba(255, 184, 0, 0.1);
+  color: #FFB800;
+}
+
+.task-due-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #71798B;
+}
+
+.task-due-date svg {
+  font-size: 14px;
+}
+
+/* 任务弹窗样式 */
+.task-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  z-index: 2000;
+}
+
+.task-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: visible;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.task-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E8EDF2;
+}
+
+.task-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.task-number-input {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  border: none;
+  outline: none;
+  background: transparent;
+  min-width: 220px;
+}
+
+.task-number-input::placeholder {
+  color: #b0b5bd;
+}
+
+.task-modal-actions {
+  display: flex;
+  gap: 8px;
+}
+/* 標題列右側完成按鈕 */
+.header-complete-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.header-complete-btn.completed {
+  opacity: .8;
+}
+
+.task-action-btn {
+  background: none;
+  border: none;
+  color: #71798B;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.task-action-btn:hover {
+  background: #f0f2f5;
+  color: #52D0FF;
+}
+
+.task-action-btn.delete:hover {
+  color: #ff6b6b;
+}
+
+.task-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.link-add-btn {
+  background: transparent;
+  border: none;
+  color: #52D0FF;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.link-add-btn:hover { background: rgba(82,208,255,.1); }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #E8EDF2;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.input-with-icon svg {
+  position: absolute;
+  right: 12px;
+  color: #71798B;
+}
+
+/* 隱藏日期/時間右側圖示（依需求） */
+.input-with-icon.no-icon svg { display: none; }
+
+.add-reminder-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.add-reminder-btn:hover {
+  background: #3BB8E6;
+}
+/* 日期時間橫向排列 */
+.date-time-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-fake-wrapper { position: relative; }
+.fake-input {
+  padding: 10px 12px;
+  border: 1px solid #E8EDF2;
+  border-radius: 8px;
+  width: 160px;
+  font-size: 14px;
+  color: #333;
+  background: #fff;
+  cursor: text;
+}
+
+.visually-hidden-date {
+  position: absolute;
+  inset: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.click-box { cursor: text; }
+
+/* 控制日期與時間欄位寬度（依照設計縮短） */
+.date-time-row .input-with-icon:first-child input {
+  width: 160px;
+}
+
+.date-time-row .input-with-icon:last-child input {
+  width: 130px;
+}
+
+/* 隱藏瀏覽器原生日期/時間圖示，移除多餘空間 */
+input[type="date"]::-webkit-calendar-picker-indicator { display: none; }
+input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
+input[type="date"]::-ms-clear { display: none; }
+input[type="time"]::-ms-clear { display: none; }
+
+/* 更強制移除原生icon對齊空間 */
+.no-native-icon { background: transparent; -webkit-appearance: none; appearance: none; }
+.no-native-icon::-webkit-calendar-picker-indicator {
+  display: none !important;
+  opacity: 0 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+}
+.no-native-icon::-webkit-inner-spin-button { display: none !important; }
+.no-native-icon::-ms-expand { display: none !important; }
+
+
+.reminder-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reminder-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.reminder-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #E8EDF2;
+  min-width: 150px;
+}
+
+.reminder-item .reminder-text { cursor: pointer; }
+
+.remove-reminder-btn {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.remove-reminder-btn:hover {
+  background: #ff6b6b;
+  color: white;
+}
+
+.no-reminders {
+  color: #71798B;
+  font-style: italic;
+  font-size: 14px;
+}
+
+.complete-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.complete-btn:hover {
+  background: #3BB8E6;
+}
+
+.complete-btn.completed {
+  background: #52D0FF;
+  opacity: 0.7;
+}
+
+.complete-btn.completed:hover {
+  background: #3BB8E6;
+  opacity: 1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #E8EDF2;
+}
+
+.save-btn {
+  background: #52D0FF;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-btn:hover {
+  background: #3BB8E6;
+  transform: translateY(-1px);
+}
+
+.cancel-btn {
+  background: #f8f9fa;
+  color: #71798B;
+  border: 1px solid #E8EDF2;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.rich-text-editor {
+  border: 1px solid #E8EDF2;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #E8EDF2;
+}
+
+.toolbar-btn {
+  background: white;
+  border: 1px solid #E8EDF2;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #B0B3B8;
+}
+
+.toolbar-btn:hover {
+  background: #52D0FF;
+  color: white;
+  border-color: #52D0FF;
+}
+
+.toolbar-btn.color,
+.toolbar-btn.highlight {
+  font-weight: bold;
+}
+
+/* 字體選擇器樣式 */
+.font-family,
+.font-size {
+  background: white;
+  border: 1px solid #E8EDF2;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #B0B3B8;
+  margin-right: 8px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.font-family:hover,
+.font-size:hover {
+  border-color: #52D0FF;
+}
+
+/* 按鈕特殊樣式 */
+.toolbar-btn.bold {
+  font-weight: bold;
+}
+
+.toolbar-btn.italic {
+  font-style: italic;
+}
+
+.toolbar-btn.underline {
+  text-decoration: underline;
+}
+
+.toolbar-btn.strikethrough {
+  text-decoration: line-through;
+}
+
+.toolbar-btn.color {
+  text-decoration: underline;
+}
+
+.toolbar-btn.highlight {
+  background: #FFF3C4;
+}
+
+.toolbar-btn.align-left::before {
+  content: "≡";
+  font-size: 14px;
+}
+
+.toolbar-btn.align-center::before {
+  content: "≡";
+  font-size: 14px;
+}
+
+.toolbar-btn.align-right::before {
+  content: "≡";
+  font-size: 14px;
+}
+
+.toolbar-btn.justify::before {
+  content: "≡";
+  font-size: 14px;
+}
+
+.toolbar-btn.bullet-list::before {
+  content: "•";
+  font-size: 16px;
+}
+
+.toolbar-btn.numbered-list::before {
+  content: "1.";
+  font-size: 12px;
+}
+
+.toolbar-btn.link::before {
+  content: "🔗";
+  font-size: 14px;
+}
+
+.toolbar-btn.image::before {
+  content: "🖼️";
+  font-size: 14px;
+}
+
+.toolbar-btn.clear-format::before {
+  content: "Tx";
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.rich-text-editor textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.editor-content {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  background: white;
+  overflow-y: auto;
+}
+
+.editor-content:empty:before {
+  content: attr(placeholder);
+  color: #B0B3B8;
+  font-style: italic;
+}
+
+.editor-content:focus {
+  outline: none;
+}
+
+/* ReactQuill 編輯器樣式 */
+.editor-container {
+  width: 100%;
+  min-height: 120px;
+}
+
+.editor-container .ql-editor {
+  min-height: 100px;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 16px;
+}
+
+.editor-container .ql-toolbar {
+  border: 1px solid #E8EDF2;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: #f8f9fa;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editor-container .ql-toolbar .ql-formats {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+}
+
+.editor-container .ql-toolbar .ql-formats:first-child {
+  justify-content: flex-start;
+}
+
+.editor-container .ql-toolbar .ql-formats:last-child {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.task-modal .editor-container .ql-toolbar {
+  display: none !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  white-space: nowrap !important;
+  gap: 8px !important;
+  padding: 8px !important;
+}
+
+.task-modal .editor-container:focus-within .ql-toolbar {
+  display: flex !important;
+}
+
+.task-modal .editor-container .ql-toolbar .ql-formats {
+  display: inline-flex !important;
+  flex-wrap: nowrap !important;
+  margin: 0 !important;
+  margin-right: 6px !important;
+  gap: 4px !important;
+  align-items: center !important;
+  flex: 0 0 auto !important;
+}
+
+.task-modal .editor-container .ql-toolbar button,
+.task-modal .editor-container .ql-toolbar .ql-picker {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  flex: 0 0 auto !important;
+}
+
+.task-modal .editor-container .ql-toolbar .ql-picker.ql-color,
+.task-modal .editor-container .ql-toolbar .ql-picker.ql-background {
+  width: 28px !important;
+  min-width: 28px !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.task-modal .editor-container .ql-toolbar .ql-picker.ql-color .ql-picker-label,
+.task-modal .editor-container .ql-toolbar .ql-picker.ql-background .ql-picker-label {
+  width: 28px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  border: none !important;
+}
+
+.task-modal .editor-container .ql-toolbar .ql-picker.ql-color .ql-picker-label svg,
+.task-modal .editor-container .ql-toolbar .ql-picker.ql-background .ql-picker-label svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.task-modal .editor-container .ql-container {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 2 !important;
+  min-height: 90px !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+.task-modal .editor-container .ql-editor {
+  min-height: 90px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+.task-modal .editor-container .ql-tooltip {
+  z-index: 30000 !important;
+}
+
+.task-modal .editor-container:has(.ql-tooltip:not(.ql-hidden)) .ql-toolbar {
+  display: flex !important;
+}
+
+.task-modal .editor-container .ql-toolbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.task-modal .editor-container .ql-toolbar::-webkit-scrollbar-thumb {
+  background: #d3d9e2;
+  border-radius: 4px;
+}
+
+/* 移除描述區額外保留高度，避免出現多餘橫線與空白區 */
+.task-modal .editor-container {
+  min-height: 0 !important;
+}
+
+.editor-container .ql-toolbar button {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E8EDF2;
+  border-radius: 4px;
+  background: white;
+  color: #B0B3B8;
+  font-size: 12px;
+  font-weight: normal;
+  padding: 0;
+  margin: 0;
+  transition: all 0.2s ease;
+}
+
+.editor-container .ql-toolbar button:hover {
+  background: #52D0FF;
+  color: white;
+  border-color: #52D0FF;
+}
+
+.editor-container .ql-toolbar button.ql-active {
+  background: #52D0FF;
+  color: white;
+  border-color: #52D0FF;
+}
+
+.editor-container .ql-toolbar .ql-picker {
+  height: 28px;
+  border: 1px solid #E8EDF2;
+  border-radius: 4px;
+  background: white;
+  color: #B0B3B8;
+  font-size: 12px;
+  margin: 0;
+}
+
+.editor-container .ql-toolbar .ql-picker-label {
+  padding: 4px 8px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+}
+
+.editor-container .ql-toolbar .ql-picker-options {
+  border: 1px solid #E8EDF2;
+  border-radius: 4px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.editor-container .ql-container {
+  border: 1px solid #E8EDF2;
+  border-radius: 0 0 8px 8px;
+  font-size: 14px;
+}
+
+.editor-container .ql-editor.ql-blank::before {
+  color: #B0B3B8;
+  font-style: italic;
+  content: attr(data-placeholder);
+}
+
+.font-family,
+.font-size {
+  padding: 4px 8px;
+  border: 1px solid #E8EDF2;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.home-subtasks-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  background: #f8f9fa;
+  border: 1px solid #e8edf2;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.home-subtasks-list.character-recommend-list {
+  grid-template-columns: 1fr;
+}
+
+.home-subtask-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e8edf2;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.home-subtask-item.completed .home-subtask-title {
+  color: #999;
+  text-decoration: line-through;
+}
+
+.home-subtask-title {
+  font-size: 13px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-subtask-check {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #cfd8dc;
+  background: #fff;
+  color: #fff;
+  cursor: pointer;
+  line-height: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0;
+}
+
+.home-subtask-check.completed {
+  background: #52D0FF;
+  border-color: #52D0FF;
+  color: #fff;
+}
+
+.home-subtask-countdown {
+  display: block;
+  font-size: 11px;
+  color: #52D0FF;
+  margin-top: 2px;
+}
+
+.home-subtask-countdown.overdue {
+  color: #ff6b6b;
+}
+
+/* 自訂時間選擇器 */
+.time-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+}
+
+.time-picker {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+.time-picker-wheels {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wheel {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #E8EDF2;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.wheel-item {
+  padding: 10px 12px;
+  text-align: center;
+  color: #777;
+  cursor: pointer;
+}
+
+.wheel-item.custom-input {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.wheel-item.custom-input input {
+  width: 80px;
+  padding: 6px 8px;
+  border: 1px solid #E8EDF2;
+  border-radius: 6px;
+}
+.mini-apply {
+  background: #52D0FF;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.mini-apply:hover { background: #3BB8E6; }
+
+.wheel-item.active {
+  background: #eef6ff;
+  color: #333;
+  font-weight: 600;
+}
+
+.time-picker-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

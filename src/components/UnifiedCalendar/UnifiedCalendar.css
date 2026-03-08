@@ -1,0 +1,84 @@
+.unified-calendar-page {
+  width: 100%;
+  min-height: calc(100vh - 48px);
+  padding: 16px 16px 16px 52px; /* 左側多 20px */
+  box-sizing: border-box;
+}
+
+.unified-calendar-card {
+  background: #fff;
+  border: 1px solid #e5edf5;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.unified-calendar-hint {
+  font-size: 13px;
+  color: #5f6f82;
+  margin-bottom: 12px;
+}
+
+.unified-calendar-list {
+  border-top: 1px solid #edf2f7;
+  padding-top: 10px;
+}
+
+.unified-calendar-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #eef3f8;
+}
+
+.unified-calendar-list-item .type {
+  font-size: 11px;
+  color: #52D0FF;
+  border: 1px solid #c9f2ff;
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+
+.unified-calendar-list-item .title {
+  font-size: 13px;
+  color: #273347;
+}
+
+.unified-calendar-empty {
+  color: #7d8898;
+  font-size: 13px;
+  padding: 6px 0;
+}
+
+.unified-calendar-page .chart-filter-checkbox {
+  accent-color: #52D0FF;
+}
+
+.sub-calendar-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #b8c2d0;
+  border-radius: 3px;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.sub-calendar-checkbox:checked {
+  background: #52D0FF;
+  border-color: #52D0FF;
+}
+
+.sub-calendar-checkbox:checked::after {
+  content: "";
+  width: 6px;
+  height: 3px;
+  border-left: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+}

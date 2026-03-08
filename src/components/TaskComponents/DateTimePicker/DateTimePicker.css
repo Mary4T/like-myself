@@ -1,0 +1,81 @@
+.date-time-picker {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.date-time-picker .MuiTextField-root {
+  width: 100%;
+}
+
+/* 提醒設置區域 */
+.reminder-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.reminder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.reminder-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+}
+
+/* 提醒選項容器 */
+.reminder-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* 添加提醒按鈕 */
+.add-reminder-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: none;
+  border: 1px dashed #52D0FF;
+  border-radius: 4px;
+  color: #52D0FF;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.add-reminder-btn:hover {
+  background: rgba(82, 208, 255, 0.1);
+}
+
+/* 刪除提醒按鈕 */
+.delete-reminder-btn {
+  padding: 4px;
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.delete-reminder-btn:hover {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+}

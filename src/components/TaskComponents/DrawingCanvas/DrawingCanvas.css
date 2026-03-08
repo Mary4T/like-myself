@@ -1,0 +1,291 @@
+.drawing-canvas-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    border: 1px solid #ccc;
+    margin: 10px 0;
+  }
+  
+  .drawing-canvas {
+    width: 100%;
+    height: 100%;
+    background: white;
+    cursor: crosshair;
+  }
+  
+  .toolbar {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    display: flex;
+    gap: 10px;
+    padding: 5px;
+    background: #f5f5f5;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  
+  .tool-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    background: white;
+    cursor: pointer;
+  }
+  
+  .tool-btn.active {
+    background: #e0e0e0;
+  }
+  
+  .tool-btn:hover {
+    background: #f0f0f0;
+  }
+
+  /* ... 原有的樣式 ... */
+
+.tool-btn {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 3px;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tool-btn:hover {
+  background: #f0f0f0;
+}
+
+.tool-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.eraser-size-slider {
+  width: 100px;
+  margin: 0 10px;
+  vertical-align: middle;
+}
+
+.tool-btn.active {
+  background-color: #e0e0e0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.drawing-notes {
+  position: relative;
+  width: 100%;
+  margin: 20px 0;
+  z-index: 1;  /* 確保不會蓋住其他元素 */
+}
+
+.canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 300px;  /* 設定固定高度 */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.drawing-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  touch-action: none;
+}
+
+.indicator-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ... 原有的樣式 ... */
+
+.eraser-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+}
+
+.eraser-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+}
+
+.eraser-checkbox input {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* 確保任務列表在繪圖區下方正常顯示 */
+.subtasks-list {
+  position: relative;
+  z-index: 2;
+  margin-top: 20px;
+  background: white;
+}
+
+/* 確保其他內容也能正常顯示 */
+.task-meta {
+  position: relative;
+  z-index: 2;
+  margin-top: 20px;
+  background: white;
+}
+
+/* 套索選擇區域的樣式 */
+.lasso-selection {
+  position: absolute;
+  border: 1px dashed #666;
+  background: rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* 選中區域的控制點樣式 */
+.resize-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: white;
+  border: 1px solid #666;
+  border-radius: 50%;
+  z-index: 4;
+}
+
+/* 不同位置控制點的位置 */
+.resize-handle.nw { cursor: nw-resize; top: -4px; left: -4px; }
+.resize-handle.ne { cursor: ne-resize; top: -4px; right: -4px; }
+.resize-handle.sw { cursor: sw-resize; bottom: -4px; left: -4px; }
+.resize-handle.se { cursor: se-resize; bottom: -4px; right: -4px; }
+
+/* 套索繪製時的指示線樣式 */
+.lasso-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* 修改現有的 indicator-canvas 樣式 */
+.indicator-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  /* 當使用套索工具時也顯示 */
+  display: block !important;
+}
+
+.lasso-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+}
+
+.lasso-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+}
+
+.lasso-checkbox input {
+  margin: 0;
+  cursor: pointer;
+}
+
+.lasso-selection {
+  position: absolute;
+  border: 1px dashed #666;
+  background: rgba(0, 0, 0, 0.1);
+  pointer-events: all;
+  z-index: 3;
+}
+
+.lasso-selection:hover {
+  cursor: move;
+}
+
+.selection-controls {
+  display: flex;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 5px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.selection-controls button {
+  padding: 2px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.selection-controls button:hover {
+  background: #f0f0f0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ddd;
+}
+
+.tool-btn {
+  padding: 5px;
+  background-color: transparent;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.tool-btn.active {
+  background-color: #e0e0e0;
+}
+
+.eraser-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.eraser-size-slider {
+  width: 100px;
+}
+
+.eraser-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
