@@ -3,7 +3,7 @@
  * - resetProjectTasksIfNeeded: 檢查新週期並重置任務、補記 repeatLog
  */
 
-const getLocalDateKey = (d, unit = 'day') => {
+export const getLocalDateKey = (d, unit = 'day') => {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');

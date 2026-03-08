@@ -579,7 +579,7 @@ const UnifiedCalendarView = () => {
   const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
 
   const renderFilterPanel = () => (
-    <div style={{ position: 'absolute', top: 34, right: 0, width: 320, background: '#fff', border: '1px solid #e1e5e9', borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.12)', zIndex: 20, padding: 12 }}>
+    <div style={{ width: 320, background: '#fff', border: '1px solid #e1e5e9', borderRadius: 8, boxShadow: '0 6px 20px rgba(0,0,0,0.12)', padding: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <strong style={{ fontSize: 13, color: '#333' }}>篩選</strong>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -1015,7 +1015,7 @@ const UnifiedCalendarView = () => {
             </div>
           </div>
           {showFilterPanel && (
-            <div ref={filterRef}>
+            <div ref={filterRef} style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, zIndex: 20 }}>
               {renderFilterPanel()}
             </div>
           )}

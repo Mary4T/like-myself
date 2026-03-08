@@ -1618,6 +1618,25 @@
   opacity: .8;
 }
 
+/* 任務日誌按鈕（與項目管理頁面一致） */
+.task-modal-actions .header-progress-btn {
+  background: #f0f2f5;
+  color: #333;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.task-modal-actions .header-progress-btn.enabled:hover {
+  background: #e0e5eb;
+  color: #52D0FF;
+}
+
 .task-action-btn {
   background: none;
   border: none;

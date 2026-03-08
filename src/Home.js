@@ -47,8 +47,11 @@ import {
 } from './utils/characterMoodUtils';
 import { dispatchAvatarUpdated } from './components/CharacterButton';
 import { PROJECT_TASKS_UPDATED_EVENT, TASK_TAGS_UPDATED_EVENT } from './components/GlobalAddTaskModal';
-import { resetProjectTasksIfNeeded } from './utils/projectTaskRepeatUtils';
+import { resetProjectTasksIfNeeded, getLocalDateKey } from './utils/projectTaskRepeatUtils';
 import { OPEN_OVERVIEW_USER_SETTINGS_EVENT } from './components/PageSettingsButton';
+import { useTaskRepeat } from './hooks/useTaskRepeat';
+import * as TaskUtils from './components/ProjectTasks/taskUtils';
+import RepeatLogModal from './components/ProjectTasks/SubPanels/RepeatLogModal';
 
 // ReactQuill 配置
 const modules = {
@@ -703,6 +706,41 @@ useEffect(() => {
     setShowTaskModal(false);
     setSelectedTask(null);
   };
+
+  // 總覽任務彈窗：更新項目任務樹並保存（供任務日誌使用）
+  const updateTasksAndSaveForModal = useCallback((updater) => {
+    setProjectTaskTree((prev) => {
+      const fullTree = [{ id: 'root', children: prev }];
+      const nextFull = typeof updater === 'function' ? updater(fullTree) : fullTree;
+      const next = nextFull?.[0]?.children ?? prev;
+      try {
+        const saved = localStorage.getItem('projectTasks');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localStorage.setItem('projectTasks', JSON.stringify([{ ...parsed[0], children: next }]));
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(PROJECT_TASKS_UPDATED_EVENT));
+      }
+      // 同步彈窗中的 selectedTask（任務日誌修改後，讓 useTaskRepeat 讀到最新 repeatLog）
+      queueMicrotask(() => {
+        setSelectedTask((p) => {
+          if (!p?.id) return p;
+          const updated = TaskUtils.findTaskById(nextFull, p.id);
+          if (!updated) return p;
+          return { ...p, ...updated, details: { ...p.details, ...updated.details } };
+        });
+      });
+      return next;
+    });
+  }, []);
+
+  const repeatManager = useTaskRepeat(selectedTask, updateTasksAndSaveForModal, getLocalDateKey);
 
   // ReactQuill 編輯器變更處理
   const handleEditorChange = (content) => {
@@ -1648,31 +1686,55 @@ useEffect(() => {
               </div>
             ) : (
               <div className="project-tasks-grid">
-                {visibleProjectTasks.map((task, index) => (
-                  <div 
-                    key={task.id} 
-                    className="project-task-card"
-                    onClick={() => handleProjectTaskClick(task)}
-                  >
-                    <div className="task-card-header">
-                      <span className={`level-badge level-${task.level?.toLowerCase() || 'a'}`}>
-                        {task.level || 'A'}
-                      </span>
-                      <span className="task-card-title">{task.title || `Task ${index + 1}`}</span>
-                    </div>
-                    <div className="task-card-status">
-                      <span className={`status-indicator ${task.status === 'completed' ? 'completed' : 'pending'}`}>
-                        {task.status === 'completed' ? '已完成' : '進行中'}
-                      </span>
-                    </div>
-                    {task.details?.dueDate && (
-                      <div className="task-card-due-date">
-                        <BsCalendar />
-                        <span>{new Date(task.details.dueDate).toLocaleDateString()}</span>
+                {visibleProjectTasks.map((task, index) => {
+                  const progress = TaskUtils.calculateTaskProgress(task);
+                  const subtasks = (task.children || []).filter(c => c && c.id && !c.isPlaceholder && !c.isPlaceholderHeader);
+                  return (
+                    <div 
+                      key={task.id} 
+                      className="project-task-card"
+                      onClick={() => handleProjectTaskClick(task)}
+                    >
+                      <div className="task-card-header">
+                        <span className={`level-badge level-${task.level?.toLowerCase() || 'a'}`}>
+                          {task.level || 'A'}
+                        </span>
+                        <span className="task-card-title">{task.title || `Task ${index + 1}`}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div className="task-card-progress" style={{ width: '100%', height: '4px', background: '#eee', borderRadius: '2px', overflow: 'hidden', marginBottom: '8px' }}>
+                        <div style={{ width: `${progress}%`, height: '100%', background: '#d4d8de', borderRadius: '2px', transition: 'width 0.2s ease' }} />
+                      </div>
+                      {subtasks.length > 0 && (
+                        <div className="task-card-subtasks" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px 8px', fontSize: '11px', marginBottom: '8px', textAlign: 'left' }}>
+                          {subtasks.map((s) => (
+                            <span
+                              key={s.id}
+                              style={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                color: s.status === 'completed' ? '#52D0FF' : '#8b95a3'
+                              }}
+                            >
+                              {s.title || '未命名'}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="task-card-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                        {task.details?.dueDate ? (
+                          <div className="task-card-due-date">
+                            <BsCalendar />
+                            <span>{new Date(task.details.dueDate).toLocaleDateString()}</span>
+                          </div>
+                        ) : <span />}
+                        <span className={`status-indicator ${task.status === 'completed' ? 'completed' : 'pending'}`}>
+                          {task.status === 'completed' ? '已完成' : '進行中'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1734,6 +1796,14 @@ useEffect(() => {
                 />
               </div>
               <div className="task-modal-actions">
+                {selectedTask.details?.repeat?.enabled && (
+                  <button
+                    className="header-progress-btn enabled"
+                    onClick={() => repeatManager.setShowModal(true)}
+                  >
+                    📊 任務日誌
+                  </button>
+                )}
                 <button 
                   className={`header-complete-btn ${selectedTask.status === 'completed' ? 'completed' : ''}`}
                   onClick={handleToggleTaskStatus}
@@ -1919,6 +1989,9 @@ useEffect(() => {
             </div>
           </div>
         </div>
+      )}
+      {selectedTask?.level && (
+        <RepeatLogModal selectedTask={selectedTask} repeatManager={repeatManager} />
       )}
       {showTimePicker && (
         <div className="time-picker-overlay" onClick={() => setShowTimePicker(false)}>

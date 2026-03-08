@@ -1439,8 +1439,7 @@ const TaskDetailPanel = (props) => {
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                flexShrink: 0,
-                                transform: 'translateY(-1px)'
+                                flexShrink: 0
                               }}
                               aria-label={subtask.status === 'completed' ? '標記為未完成' : '標記為已完成'}
                             >
@@ -1448,8 +1447,6 @@ const TaskDetailPanel = (props) => {
                                 style={{
                                   width: '18px',
                                   height: '18px',
-                                  position: 'relative',
-                                  top: '-4px',
                                   borderRadius: '3px',
                                   border: `2px solid ${subtask.status === 'completed' ? '#52D0FF' : '#cfd8dc'}`,
                                   background: subtask.status === 'completed' ? '#52D0FF' : '#fff',
@@ -1729,7 +1726,10 @@ const TaskDetailPanel = (props) => {
                   </div>
 
                   <div className="tags-list">
-                    <h4 style={{ marginBottom: '16px' }}>所有屬性</h4>
+                    <h4 style={{ marginBottom: '8px' }}>所有屬性</h4>
+                    <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#999' }}>
+                      勾選：計入甘特圖、進度、經驗值；取消勾選：排除於上述統計（日曆仍顯示）
+                    </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                       {taskTags.map((tag) => {
                         const isDropTarget = dragOverTagId === String(tag.id);
@@ -1803,7 +1803,7 @@ const TaskDetailPanel = (props) => {
                                 </button>
                                 <button
                                   onClick={() => handleDeleteTag(tag.id)}
-                                  style={{ padding: '6px 12px', background: '#ff4444', color: 'white', border: 'none', borderRadius: '4px' }}
+                                  style={{ padding: '6px 12px', background: '#a5aebc', color: 'white', border: 'none', borderRadius: '4px' }}
                                 >
                                   刪除
                                 </button>
