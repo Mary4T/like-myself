@@ -62,6 +62,23 @@ export const getLocalDateKeyForRepeat = (task, d) => {
 };
 
 /**
+ * 判斷重複任務的某次發生是否已完成（供篩選用）
+ * @param {Object} task - 任務
+ * @param {Date} occurrenceStart - 該次發生的開始時間
+ * @returns {boolean} - 該次是否已完成
+ */
+export const isOccurrenceCompleted = (task, occurrenceStart) => {
+  const rep = task?.details?.repeat;
+  if (!rep || !(rep.enabled === true || rep.enabled === 'true')) {
+    return task?.status === 'completed' || task?.completed === true;
+  }
+  const log = task.details?.repeatLog || {};
+  const dateKey = getLocalDateKeyForRepeat(task, occurrenceStart);
+  const entry = log[dateKey];
+  return entry && (entry.completed === true || entry.completed === 'true');
+};
+
+/**
  * 將 dateKey 轉為顯示用日期字串（依 startDate 的星期幾）
  * 若任務有 startDate，顯示該週對應星期幾的日期（如每週五→顯示週五日期）
  * 若無 startDate，顯示該週週一日期（去掉 W- 前綴）

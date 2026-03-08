@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useLayoutEffect, useCallback } from 'react';
 import { DEFAULT_ICONS } from '../TaskComponents/IconSelector/defaultIcons';
+import { isOccurrenceCompleted } from '../../utils/projectTaskRepeatUtils';
 import ReminderPanel from './SubPanels/ReminderPanel';
 import TaskHeaderSection from './sections/TaskHeaderSection';
 import StartDateSection from './sections/StartDateSection';
@@ -286,17 +287,33 @@ const TaskDetailPanel = (props) => {
     return statusMatch && priorityMatch && tagMatch;
   }, [getDefaultChartFilters, getTaskPriorityKey, getTaskTagKey]);
 
+  /** 僅檢查 priority、tag（status 改為 occurrence 層級篩選） */
+  const matchesChartFiltersExceptStatus = useCallback((task, filters) => {
+    const activeFilters = filters || getDefaultChartFilters();
+    const priorityMatch = (activeFilters.priorities || []).includes(getTaskPriorityKey(task));
+    const tagMatch = (activeFilters.tags || []).includes(getTaskTagKey(task));
+    return priorityMatch && tagMatch;
+  }, [getDefaultChartFilters, getTaskPriorityKey, getTaskTagKey]);
+
+  /** 該 occurrence 是否符合狀態篩選（重複任務用 occurrence 完成狀態，非重複用 task.status） */
+  const occurrenceMatchesStatusFilter = useCallback((task, occurrenceStart, statuses) => {
+    const s = (statuses || []).map(String);
+    if (s.length === 0 || (s.includes('completed') && s.includes('pending'))) return true;
+    const completed = isOccurrenceCompleted(task, occurrenceStart);
+    return (completed && s.includes('completed')) || (!completed && s.includes('pending'));
+  }, [isOccurrenceCompleted]);
+
   const overviewFilteredTasks = useMemo(
     () => tasksIncludedInViews.filter(task => matchesChartFilters(task, overviewFilters)),
     [tasksIncludedInViews, matchesChartFilters, overviewFilters]
   );
   const ganttFilteredTasks = useMemo(
-    () => tasksIncludedInViews.filter(task => matchesChartFilters(task, ganttFilters)),
-    [tasksIncludedInViews, ganttFilters, matchesChartFilters]
+    () => tasksIncludedInViews.filter(task => matchesChartFiltersExceptStatus(task, ganttFilters)),
+    [tasksIncludedInViews, ganttFilters, matchesChartFiltersExceptStatus]
   );
   const calendarFilteredTasks = useMemo(
-    () => allTasks.filter(task => matchesChartFilters(task, calendarFilters)),
-    [allTasks, calendarFilters, matchesChartFilters]
+    () => allTasks.filter(task => matchesChartFiltersExceptStatus(task, calendarFilters)),
+    [allTasks, calendarFilters, matchesChartFiltersExceptStatus]
   );
   const visibleSelectedInOverview = useMemo(
     () => overviewFilteredTasks.filter(task => selectedTasks.has(task.id)).length,
@@ -470,17 +487,21 @@ const TaskDetailPanel = (props) => {
     const rangeStart = new Date(ganttTimelineBase.startDate);
     const rangeEnd = new Date(ganttTimelineBase.endDate);
     rangeEnd.setHours(23, 59, 59, 999);
+    const statuses = ganttFilters?.statuses || [];
     return ganttFilteredTasks
       .map((task) => {
-        const windows = getTaskDisplayWindows(task, rangeStart, rangeEnd).map((window, idx) => ({
-          start: window.start,
-          end: window.end,
-          key: `${task.id}-${window.start.getTime()}-${idx}`
-        }));
+        const allWindows = getTaskDisplayWindows(task, rangeStart, rangeEnd);
+        const windows = allWindows
+          .filter((window) => occurrenceMatchesStatusFilter(task, window.start, statuses))
+          .map((window, idx) => ({
+            start: window.start,
+            end: window.end,
+            key: `${task.id}-${window.start.getTime()}-${idx}`
+          }));
         return windows.length ? { ...task, _windows: windows } : null;
       })
       .filter(Boolean);
-  }, [ganttFilteredTasks, ganttTimelineBase, getTaskDisplayWindows]);
+  }, [ganttFilteredTasks, ganttTimelineBase, ganttFilters?.statuses, getTaskDisplayWindows, occurrenceMatchesStatusFilter]);
 
   const dayViewTasks = useMemo(() => {
     if (!dayViewDate) return [];
@@ -488,8 +509,12 @@ const TaskDetailPanel = (props) => {
     rangeStart.setHours(0, 0, 0, 0);
     const rangeEnd = new Date(dayViewDate);
     rangeEnd.setHours(23, 59, 59, 999);
-    return ganttFilteredTasks.filter(task => getTaskDisplayWindows(task, rangeStart, rangeEnd).length > 0);
-  }, [ganttFilteredTasks, dayViewDate, getTaskDisplayWindows]);
+    const statuses = ganttFilters?.statuses || [];
+    return ganttFilteredTasks.filter((task) => {
+      const windows = getTaskDisplayWindows(task, rangeStart, rangeEnd);
+      return windows.some((w) => occurrenceMatchesStatusFilter(task, w.start, statuses));
+    });
+  }, [ganttFilteredTasks, dayViewDate, ganttFilters?.statuses, getTaskDisplayWindows, occurrenceMatchesStatusFilter]);
 
   const getLinkedCount = (field, value) => {
     const all = getAllChartFilterValues();
@@ -985,13 +1010,16 @@ const TaskDetailPanel = (props) => {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
       weekEnd.setHours(23,59,59,999);
+      const calStatuses = calendarFilters?.statuses || [];
       const visibleInWeek = calendarFilteredTasks.flatMap((task) =>
-        getTaskDisplayWindows(task, weekStart, weekEnd).map((window, idx) => ({
-          ...task,
-          startDate: window.start,
-          endDate: window.end,
-          _instanceKey: `${task.id}-cal-${window.start.getTime()}-${idx}`
-        }))
+        getTaskDisplayWindows(task, weekStart, weekEnd)
+          .filter((window) => occurrenceMatchesStatusFilter(task, window.start, calStatuses))
+          .map((window, idx) => ({
+            ...task,
+            startDate: window.start,
+            endDate: window.end,
+            _instanceKey: `${task.id}-cal-${window.start.getTime()}-${idx}`
+          }))
       ).filter(t => t.startDate <= weekEnd && t.endDate >= weekStart);
       const usedLayers = new Map();
       const layeredSegments = visibleInWeek.sort((a, b) => a.startDate - b.startDate).map(task => {
@@ -1014,9 +1042,11 @@ const TaskDetailPanel = (props) => {
         return `${y}-${m}-${d}`;
       };
       const dayTaskMap = new Map();
+      const calStatuses = calendarFilters?.statuses || [];
       calendarFilteredTasks.forEach((task) => {
         const windows = getTaskDisplayWindows(task, plannerStart, plannerEnd);
         windows.forEach((window, idx) => {
+          if (!occurrenceMatchesStatusFilter(task, window.start, calStatuses)) return;
           const startDay = new Date(window.start);
           startDay.setHours(0, 0, 0, 0);
           const endDay = new Date(window.end);

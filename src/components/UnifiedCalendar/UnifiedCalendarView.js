@@ -9,6 +9,7 @@ import {
   loadLastViewedCalendarId,
   saveLastViewedCalendarId
 } from '../../features/unifiedCalendar/storage';
+import { isOccurrenceCompleted } from '../../utils/projectTaskRepeatUtils';
 import { PROJECT_TASKS_UPDATED_EVENT, TASK_TAGS_UPDATED_EVENT } from '../GlobalAddTaskModal';
 import './UnifiedCalendar.css';
 
@@ -264,6 +265,18 @@ const getTaskBarColor = (task, mode, getTagColor) => {
   return task.status === 'completed' ? '#4CAF50' : '#E0E0E0';
 };
 
+/** 一次性任務邊框色（與項目管理日曆一致） */
+const getBorderColor = (baseColor) => {
+  if (!baseColor) return '#4fc8f5';
+  let r, g, b;
+  if (baseColor.startsWith('#')) {
+    r = parseInt(baseColor.slice(1, 3), 16); g = parseInt(baseColor.slice(3, 5), 16); b = parseInt(baseColor.slice(5, 7), 16);
+  } else if (baseColor.startsWith('rgb')) {
+    const match = baseColor.match(/\d+/g); if (match) [r, g, b] = match.map(Number);
+  }
+  return r !== undefined ? `rgb(${Math.max(0, Math.floor(r * 0.85))}, ${Math.max(0, Math.floor(g * 0.85))}, ${Math.max(0, Math.floor(b * 0.85))})` : '#4fc8f5';
+};
+
 const loadUnifiedFilters = () => {
   try {
     const raw = localStorage.getItem(UNIFIED_CALENDAR_FILTERS_KEY);
@@ -504,14 +517,19 @@ const UnifiedCalendarView = () => {
   const visibleTasks = React.useMemo(() => {
     return subCalendarVisibleTasks.filter((item) => {
       const task = item.task || {};
-      const status = String(task.status || 'pending');
       const priority = String(task.priority || 'none');
       const tag = String(task.tagId || 'none');
-      return (calendarFilters.statuses || []).map(String).includes(status)
-        && (calendarFilters.priorities || []).map(String).includes(priority)
+      return (calendarFilters.priorities || []).map(String).includes(priority)
         && (calendarFilters.tags || []).map(String).includes(tag);
     });
   }, [subCalendarVisibleTasks, calendarFilters]);
+
+  const occurrenceMatchesStatusFilter = React.useCallback((task, occurrenceStart, statuses) => {
+    const s = (statuses || []).map(String);
+    if (s.length === 0 || (s.includes('completed') && s.includes('pending'))) return true;
+    const completed = isOccurrenceCompleted(task, occurrenceStart);
+    return (completed && s.includes('completed')) || (!completed && s.includes('pending'));
+  }, []);
   const allFilterValues = React.useMemo(() => ({
     statuses: statusFilterOptions.map(opt => String(opt.key)),
     priorities: priorityFilterOptions.map(opt => String(opt.key)),
@@ -666,9 +684,11 @@ const UnifiedCalendarView = () => {
       const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
       const getDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       const dayTaskMap = new Map();
+      const calStatuses = (calendarFilters?.statuses || []).map(String);
       tasks.forEach((task) => {
         const windows = getTaskDisplayWindows(task, plannerStart, plannerEnd);
         windows.forEach((window, idx) => {
+          if (!occurrenceMatchesStatusFilter(task, window.start, calStatuses)) return;
           const startDay = new Date(window.start);
           startDay.setHours(0, 0, 0, 0);
           const endDay = new Date(window.end);
@@ -734,6 +754,8 @@ const UnifiedCalendarView = () => {
                           {dayTasks.map(task => (
                             (() => {
                               const isHovered = hoveredTaskId != null && String(task.id) === hoveredTaskId;
+                              const color = task._plannerColor;
+                              const isOneTime = task.taskType === 'one-time';
                               return (
                             <div
                               key={`${task._instanceKey}-${task.id}`}
@@ -741,7 +763,7 @@ const UnifiedCalendarView = () => {
                               onMouseEnter={(event) => handleTaskMouseEnter(event, task)}
                               onMouseMove={handleTaskMouseMove}
                               onMouseLeave={handleTaskMouseLeave}
-                              style={{ fontSize: 11, lineHeight: '16px', borderRadius: 3, padding: '0 4px', background: task._plannerColor, color: task._plannerColor === '#E0E0E0' ? '#333' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', boxShadow: isHovered ? '0 4px 8px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.1)', filter: isHovered ? 'brightness(1.1)' : 'none', transform: isHovered ? 'scaleY(1.08)' : 'none', transition: 'all 0.15s ease' }}
+                              style={{ fontSize: 11, lineHeight: '16px', borderRadius: 3, padding: '0 4px', background: color, border: isOneTime ? `2px solid ${getBorderColor(color)}` : 'none', color: color === '#E0E0E0' ? '#333' : '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', boxShadow: isHovered ? '0 4px 8px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.1)', filter: isHovered ? 'brightness(1.1)' : 'none', transform: isHovered ? 'scaleY(1.08)' : 'none', transition: 'all 0.15s ease', boxSizing: 'border-box' }}
                               title={task.title}
                             >
                               {task.title}
@@ -767,13 +789,16 @@ const UnifiedCalendarView = () => {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
       weekEnd.setHours(23, 59, 59, 999);
+      const calStatuses = (calendarFilters?.statuses || []).map(String);
       const visibleInWeek = tasks.flatMap((task) =>
-        getTaskDisplayWindows(task, weekStart, weekEnd).map((window, idx) => ({
-          ...task,
-          startDate: window.start,
-          endDate: window.end,
-          _instanceKey: `${task.id}-cal-${window.start.getTime()}-${idx}`
-        }))
+        getTaskDisplayWindows(task, weekStart, weekEnd)
+          .filter((window) => occurrenceMatchesStatusFilter(task, window.start, calStatuses))
+          .map((window, idx) => ({
+            ...task,
+            startDate: window.start,
+            endDate: window.end,
+            _instanceKey: `${task.id}-cal-${window.start.getTime()}-${idx}`
+          }))
       ).filter(t => t.startDate <= weekEnd && t.endDate >= weekStart);
       const usedLayers = new Map();
       const layeredSegments = visibleInWeek.sort((a, b) => a.startDate - b.startDate).map(task => {
@@ -814,6 +839,8 @@ const UnifiedCalendarView = () => {
             {row.layeredSegments.map((seg) => (
               (() => {
                 const isHovered = hoveredTaskId != null && String(seg.id) === hoveredTaskId;
+                const color = getTaskBarColor(seg, taskDisplayMode, getTagColor);
+                const isOneTime = seg.taskType === 'one-time';
                 return (
               <div key={seg._instanceKey} style={{ position: 'absolute', left: `${(seg.startCol / 7) * 100}%`, width: `${(seg.span / 7) * 100}%`, top: 24 + seg.layer * 22, padding: '0 4px', boxSizing: 'border-box' }}>
                 <div
@@ -821,7 +848,7 @@ const UnifiedCalendarView = () => {
                   onMouseEnter={(event) => handleTaskMouseEnter(event, seg)}
                   onMouseMove={handleTaskMouseMove}
                   onMouseLeave={handleTaskMouseLeave}
-                  style={{ height: 18, borderRadius: 4, fontSize: 11, lineHeight: '18px', padding: '0 6px', background: getTaskBarColor(seg, taskDisplayMode, getTagColor), color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', boxShadow: isHovered ? '0 4px 8px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.1)', filter: isHovered ? 'brightness(1.1)' : 'none', transform: isHovered ? 'scaleY(1.1)' : 'none', transition: 'all 0.15s ease' }}
+                  style={{ height: 18, borderRadius: 4, fontSize: 11, lineHeight: '18px', padding: '0 6px', background: color, border: isOneTime ? `2px solid ${getBorderColor(color)}` : 'none', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', boxShadow: isHovered ? '0 4px 8px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.1)', filter: isHovered ? 'brightness(1.1)' : 'none', transform: isHovered ? 'scaleY(1.1)' : 'none', transition: 'all 0.15s ease', boxSizing: 'border-box' }}
                   title={seg.title}
                 >
                   {seg.title}
