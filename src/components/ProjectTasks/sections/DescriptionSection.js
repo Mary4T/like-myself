@@ -20,7 +20,7 @@ const DescriptionSection = ({
     <div className="task-description">
       <CapsulePanel manager={capsuleManager} templateManager={templateManager} tasks={tasks} />
 
-      <div className="editor-container" style={{ marginTop: '12px' }}>
+      <div className="editor-container" style={{ marginTop: '24px' }}>
         <ReactQuill
           ref={quillRef}
           theme="snow"

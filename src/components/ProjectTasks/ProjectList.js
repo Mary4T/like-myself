@@ -39,6 +39,7 @@ const GANTT_DISPLAY_MODE_STORAGE_KEY = 'taskGanttDisplayMode.v1';
 const GANTT_DAY_COLUMN_WIDTH_STORAGE_KEY = 'taskGanttDayColumnWidth.v1';
 const GANTT_ZOOM_STORAGE_KEY = 'taskGanttZoom.v1';
 const OPEN_PROJECT_TASK_KEY = 'unifiedCalendar.openProjectTask.v1';
+const LAST_SELECTED_TASK_KEY = 'projectTasks.lastSelectedTaskId.v1';
 const OVERVIEW_FILTER_STORAGE_KEY = 'taskOverviewFilters.v1';
 const GANTT_FILTER_STORAGE_KEY = 'taskGanttFilters.v1';
 const CALENDAR_FILTER_STORAGE_KEY = 'taskCalendarFilters.v1';
@@ -280,7 +281,12 @@ const ProjectList = () => {
     return [{ id: 'root', title: 'Root', children: [], isHidden: true, details: { repeat: { ...DEFAULT_REPEAT } } }];
   });
 
-  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [selectedTaskId, setSelectedTaskId] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LAST_SELECTED_TASK_KEY);
+      return saved || null;
+    } catch (e) { return null; }
+  });
   const [expandedItems, setExpandedItems] = useState(new Set(['root']));
   const [activeTab, setActiveTab] = useState('details');
   const [isLayoutEditing, setIsLayoutEditing] = useState(false);
@@ -303,6 +309,23 @@ const ProjectList = () => {
       setToolbarCollapsedState(saved === 'true');
     } catch (e) { setToolbarCollapsedState(false); }
   }, [selectedTaskId]);
+
+  useEffect(() => {
+    if (selectedTaskId) {
+      try { localStorage.setItem(LAST_SELECTED_TASK_KEY, String(selectedTaskId)); } catch (e) { /* ignore */ }
+    }
+  }, [selectedTaskId]);
+
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+  const [projectTreeOpen, setProjectTreeOpen] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // 拖曳與右鍵狀態
   const [draggedTaskId, setDraggedTaskId] = useState(null);
@@ -1013,6 +1036,26 @@ const ProjectList = () => {
       localStorage.removeItem(OPEN_PROJECT_TASK_KEY);
     }
   }, [tasks]);
+
+  useEffect(() => {
+    if (localStorage.getItem(OPEN_PROJECT_TASK_KEY)) return;
+    const treeRoot = tasks.find(t => String(t.id) === 'root');
+    const flatItems = flattenTree(treeRoot?.children || []);
+    const firstTaskId = flatItems[0]?.id;
+    const currentTaskExists = selectedTaskId && TaskUtils.findTaskById(tasks, selectedTaskId);
+    const needsRestore = !currentTaskExists && flatItems.length > 0;
+    if (needsRestore) {
+      try {
+        const saved = localStorage.getItem(LAST_SELECTED_TASK_KEY);
+        if (saved && TaskUtils.findTaskById(tasks, saved)) {
+          setSelectedTaskId(saved);
+          return;
+        }
+      } catch (e) { /* ignore */ }
+      if (firstTaskId) setSelectedTaskId(firstTaskId);
+    }
+  }, [tasks, selectedTaskId]);
+
   useEffect(() => {
     try {
       localStorage.setItem(GANTT_DISPLAY_MODE_STORAGE_KEY, ganttTaskDisplayMode);
@@ -1137,7 +1180,7 @@ const ProjectList = () => {
       }
     }
                             return (
-      <div className={`project-item-header ${task.status === 'completed' ? 'completed' : ''} ${isSelected ? 'selected' : ''}`} onClick={() => { setSelectedTaskId(task.id); setActiveTab('details'); }} onContextMenu={(e) => handleContextMenu(e, task.id, task.title)}>
+      <div className={`project-item-header ${task.status === 'completed' ? 'completed' : ''} ${isSelected ? 'selected' : ''}`} onClick={() => { setSelectedTaskId(task.id); setActiveTab('details'); if (isMobile) setProjectTreeOpen(false); }} onContextMenu={(e) => handleContextMenu(e, task.id, task.title)}>
         <div className="task-info-left">
           <IoChevronDown className={`expand-icon ${expandedItems.has(task.id) ? 'expanded' : ''}`} style={{ cursor: 'pointer', transition: 'transform 0.2s', transform: expandedItems.has(task.id) ? 'rotate(0deg)' : 'rotate(-90deg)', visibility: hasChildren ? 'visible' : 'hidden' }} onClick={(e) => { e.stopPropagation(); setExpandedItems(prev => { const next = new Set(prev); if (next.has(task.id)) next.delete(task.id); else next.add(task.id); return next; }); }} />
           <span className={`level-badge level-${String(task.levelType || task.level).toLowerCase()}`}>{task.levelType || task.level}</span>
@@ -1162,9 +1205,17 @@ const ProjectList = () => {
       onDragCancel={handleDragCancel}
       onDragEnd={handleDragEnd}
     >
-      <div className="project-container">
-      <div className="project-sidebar">
+      <div className={`project-container ${isMobile ? 'project-mobile' : ''}`}>
+      {isMobile && projectTreeOpen && (
+        <div className="project-sidebar-backdrop" onClick={() => setProjectTreeOpen(false)} aria-hidden="true" />
+      )}
+      <div className={`project-sidebar ${isMobile ? 'project-sidebar-overlay' : ''} ${isMobile && projectTreeOpen ? 'project-sidebar-open' : ''}`}>
         <div className="project-header">
+          {isMobile && (
+            <button type="button" className="project-sidebar-close" onClick={() => setProjectTreeOpen(false)} aria-label="關閉">
+              <IoClose size={24} />
+            </button>
+          )}
           <div className="header-buttons">
               <button className="add-project-btn" onClick={() => { setSelectedParent('root'); setNewTask(createEmptyNewTask()); setShowAddModal(true); }}><IoAdd /> 新增任務</button>
               <button className="template-btn" onClick={() => setShowTemplateModal(true)}><IoCloudDownloadOutline /> 內容模板</button>
@@ -1180,7 +1231,7 @@ const ProjectList = () => {
           </SortableContext>
                 </div>
               </div>
-        <div className="project-content" style={{ display: 'block', padding: '16px 30px 30px 16px' }}>
+        <div className={`project-content ${isMobile ? 'project-content-mobile' : ''}`} style={!isMobile ? { display: 'block', padding: '16px 30px 30px 16px' } : undefined}>
           <TaskDetailPanel key={selectedTaskId || 'no-task'} {...{
             selectedTask, tasks, setTasks, updateTasksAndSave, taskTags, setTaskTags, getTagColor: (id) => taskTags.find(t => t.id === id)?.color,
             overviewFilters, setOverviewFilters, ganttFilters, setGanttFilters, calendarFilters, setCalendarFilters,
@@ -1193,9 +1244,8 @@ const ProjectList = () => {
             modules: {
               toolbar: [
                 [{ size: ['small', false, 'large', 'huge'] }],
-                ['bold', 'italic', 'underline', 'strike'],
+                ['bold', 'italic', 'underline', 'strike', { color: [] }, { background: [] }],
                 [{ list: 'ordered' }, { list: 'bullet' }, { indent: '-1' }, { indent: '+1' }],
-                [{ color: [] }, { background: [] }],
                 ['link', 'image', 'video'],
                 ['clean']
               ]
@@ -1236,7 +1286,11 @@ const ProjectList = () => {
             handleColumnWidthChange: (w) => setGanttColumnWidth(Math.max(20, Math.min(160, w))),
             templateManager,
             tasks: tasks, // 確保傳遞 tasks
-            onCalendarDateClickForAddTask: openAddTaskFromCalendar
+            onCalendarDateClickForAddTask: openAddTaskFromCalendar,
+            isMobile,
+            onAddTaskClick: () => { setSelectedParent('root'); setNewTask(createEmptyNewTask()); setShowAddModal(true); },
+            onTemplateClick: () => setShowTemplateModal(true),
+            onTreeToggle: () => setProjectTreeOpen(prev => !prev)
           }} />
             </div>
         </div>

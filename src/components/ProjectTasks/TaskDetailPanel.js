@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useLayoutEffect, useCallback } from 'react';
+import { IoAdd, IoCloudDownloadOutline, IoList } from 'react-icons/io5';
 import { DEFAULT_ICONS } from '../TaskComponents/IconSelector/defaultIcons';
 import { isOccurrenceCompleted } from '../../utils/projectTaskRepeatUtils';
 import ReminderPanel from './SubPanels/ReminderPanel';
@@ -53,9 +54,13 @@ const TaskDetailPanel = (props) => {
     rgbToHex, hexToRgb,
     setTagDropdownOpen, tagDropdownOpen,
     openTimePicker, openStartTimePicker,
-    handleTaskHover, handleTaskHoverLeave, hoveredTaskId, setHoveredTaskId, handleColumnWidthChange,
+    handleTaskHover, handleTaskHoverLeave, hoveredTaskId, setHoveredTaskId,     handleColumnWidthChange,
     templateManager,
-    onCalendarDateClickForAddTask
+    onCalendarDateClickForAddTask,
+    isMobile,
+    onAddTaskClick,
+    onTemplateClick,
+    onTreeToggle
   } = props;
 
   // Internal Gantt/Calendar Helpers
@@ -1202,22 +1207,55 @@ const TaskDetailPanel = (props) => {
 
   if (!selectedTask && activeTab === 'details') {
     return (
-      <div className="project-welcome">
-        <h2>歡迎使用ABCD任務系統</h2><p>選擇左側任務或創建新任務來開始</p>
-        <div className="level-guide"><h3>等級說明：</h3><ul><li><span className="level-badge level-a">A</span> A級任務 (頂層任務)</li><li><span className="level-badge level-b">B</span> B級任務 (A的子任務)</li><li><span className="level-badge level-c">C</span> C級任務 (B的子任務)</li><li><span className="level-badge level-d">D</span> D級任務 (C的子任務)</li><li><span className="level-badge level-none">NONE</span> 未分類任務</li></ul></div>
+      <div className={`task-details-container ${isLayoutEditing ? 'editing-mode' : ''}`}>
+        <div className="layout-control">
+          {isMobile && onTreeToggle && (
+            <button type="button" className="project-tree-toggle layout-control-tree-toggle" onClick={onTreeToggle} aria-label="開啟任務樹">
+              <IoList size={24} />
+            </button>
+          )}
+          {isMobile && onTemplateClick && (
+            <button type="button" className="template-btn layout-control-btn layout-control-btn-right" onClick={onTemplateClick}><IoCloudDownloadOutline /> 任務模板</button>
+          )}
+          <button className={`layout-edit-btn ${isLayoutEditing ? 'active' : ''}`} onClick={() => setIsLayoutEditing(!isLayoutEditing)}>版面布局</button>
+        </div>
+        <div className="task-content-layout">
+          <div className="task-details">
+            <div className="task-tabs" style={{ marginBottom: '20px' }}>
+              {['details', 'overview', 'tags', 'gantt', 'calendar'].map(tab => (
+                <button key={tab} className={`tab-button ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
+                  {tab === 'details' ? (isMobile ? '詳細' : '任務詳細') : tab === 'overview' ? (isMobile ? '概覽' : '任務概覽') : tab === 'tags' ? (isMobile ? '屬性' : '任務屬性') : tab === 'gantt' ? '甘特圖' : '日曆'}
+                </button>
+              ))}
+            </div>
+            <div className="task-tab-content" style={{ padding: '24px 0', color: '#666', fontSize: '14px' }}>
+              請從左側選單選擇或新增任務
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={`task-details-container ${isLayoutEditing ? 'editing-mode' : ''}`}>
-      <div className="layout-control"><button className={`layout-edit-btn ${isLayoutEditing ? 'active' : ''}`} onClick={() => setIsLayoutEditing(!isLayoutEditing)}>版面布局</button></div>
+      <div className="layout-control">
+        {isMobile && onTreeToggle && (
+          <button type="button" className="project-tree-toggle layout-control-tree-toggle" onClick={onTreeToggle} aria-label="開啟任務樹">
+            <IoList size={24} />
+          </button>
+        )}
+        {isMobile && onTemplateClick && (
+          <button type="button" className="template-btn layout-control-btn layout-control-btn-right" onClick={onTemplateClick}><IoCloudDownloadOutline /> 任務模板</button>
+        )}
+        <button className={`layout-edit-btn ${isLayoutEditing ? 'active' : ''}`} onClick={() => setIsLayoutEditing(!isLayoutEditing)}>版面布局</button>
+      </div>
       <div className={`task-content-layout ${toolbarCollapsed ? 'toolbar-collapsed' : ''}`}>
         <div className="task-details">
           <div className="task-tabs" style={{ marginBottom: '20px' }}>
             {['details', 'overview', 'tags', 'gantt', 'calendar'].map(tab => (
               <button key={tab} className={`tab-button ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
-                {tab === 'details' ? '任務詳細' : tab === 'overview' ? '任務概覽' : tab === 'tags' ? '任務屬性' : tab === 'gantt' ? '甘特圖' : '日曆'}
+                {tab === 'details' ? (isMobile ? '詳細' : '任務詳細') : tab === 'overview' ? (isMobile ? '概覽' : '任務概覽') : tab === 'tags' ? (isMobile ? '屬性' : '任務屬性') : tab === 'gantt' ? '甘特圖' : '日曆'}
               </button>
             ))}
             {activeDescriptionTag && (
@@ -1263,6 +1301,7 @@ const TaskDetailPanel = (props) => {
                     tagDropdownOpen={tagDropdownOpen}
                     setTagDropdownOpen={setTagDropdownOpen}
                     handleTaskDetailUpdate={handleTaskDetailUpdate}
+                    isMobile={isMobile}
                   />
                 </div>
                 <div {...getLayoutItemProps('start-date', { hideable: true })}>
@@ -1276,6 +1315,7 @@ const TaskDetailPanel = (props) => {
                     openStartTimePicker={openStartTimePicker}
                     openTimePicker={openTimePicker}
                     showRepeatPeriodHint={Boolean(selectedTask.details?.repeat?.enabled)}
+                    isMobile={isMobile}
                   />
                 </div>
                 <div {...getLayoutItemProps('reminders', { hideable: true })}>
@@ -1313,9 +1353,10 @@ const TaskDetailPanel = (props) => {
                           style={{ width: '50px', padding: '4px', border: '1px solid #ddd', borderRadius: '4px' }}
                         />
                         <select
+                          className="repeat-unit-select"
                           value={selectedTask.details?.repeat?.unit || 'day'}
                           onChange={(e) => handleTaskDetailUpdate(selectedTask.id, 'repeat', { ...selectedTask.details.repeat, unit: e.target.value })}
-                          style={{ padding: '4px', border: '1px solid #ddd', borderRadius: '4px' }}
+                          style={{ padding: '6px 12px', border: '1px solid #E8EDF2', borderRadius: '4px', background: 'white', cursor: 'pointer' }}
                         >
                           <option value="minute">分鐘</option>
                           <option value="day">天</option>
@@ -1326,7 +1367,7 @@ const TaskDetailPanel = (props) => {
                       </div>
 
                       {selectedTask.details?.repeat?.enabled && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="repeat-duration-row" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                           <label style={{ marginBottom: 0 }}>每次執行時長：</label>
                           <input
                             type="number"
@@ -1336,25 +1377,23 @@ const TaskDetailPanel = (props) => {
                             style={{ width: '60px', padding: '4px', border: '1px solid #ddd', borderRadius: '4px' }}
                           />
                           <select
+                            className="repeat-unit-select"
                             value={selectedTask.details?.repeat?.durationUnit || 'hour'}
                             onChange={(e) => handleTaskDetailUpdate(selectedTask.id, 'repeat', { ...selectedTask.details.repeat, durationUnit: e.target.value })}
-                            style={{ padding: '4px', border: '1px solid #ddd', borderRadius: '4px' }}
+                            style={{ padding: '6px 12px', border: '1px solid #E8EDF2', borderRadius: '4px', background: 'white', cursor: 'pointer' }}
                           >
                             <option value="minute">分鐘</option>
                             <option value="hour">小時</option>
                             <option value="day">天</option>
                           </select>
+                          <button
+                            className="repeat-log-btn"
+                            onClick={() => repeatManager.setShowModal(true)}
+                            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }}
+                          >
+                            📊 任務日誌
+                          </button>
                         </div>
-                      )}
-
-                      {selectedTask.details?.repeat?.enabled && (
-                        <button
-                          className="header-progress-btn enabled"
-                          onClick={() => repeatManager.setShowModal(true)}
-                          style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }}
-                        >
-                          📊 任務日誌
-                        </button>
                       )}
                     </div>
                   </div>

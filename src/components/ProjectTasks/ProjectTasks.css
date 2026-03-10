@@ -713,6 +713,41 @@ body.is-dragging-task .project-subitems {
   opacity: 0.9;
 }
 
+/* 任務日誌按鈕：白底、灰字、灰框（手機版與每次執行時長同一排） */
+.repeat-log-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #E8EDF2;
+  background: white;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.repeat-log-btn:hover {
+  background: #f8f9fa;
+  border-color: #ddd;
+}
+
+/* 任務類型、重複區塊單位選單：白底、灰框、無下拉箭頭（與屬性按鈕一致） */
+.task-props-select,
+.repeat-unit-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+  background-color: white;
+  border: 1px solid #E8EDF2;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
 .status-btn {
   display: flex;
   align-items: center;
@@ -1614,9 +1649,45 @@ body.is-dragging-task .project-subitems {
 .layout-control {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
   padding: 8px 16px;
   border-bottom: 1px solid #e1e5e9;
   background: #f8f9fa;
+}
+
+.layout-control-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+}
+
+.layout-control-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid #e1e5e9;
+  background: white;
+  color: #333;
+  cursor: pointer;
+}
+
+.layout-control-btn:hover {
+  background: #f0f2f5;
+}
+
+.layout-control .add-project-btn.layout-control-btn {
+  background: #52D0FF;
+  color: white;
+  border-color: #52D0FF;
+}
+
+.layout-control .add-project-btn.layout-control-btn:hover {
+  background: #4BC0EF;
 }
 
 .layout-edit-btn {
@@ -1843,9 +1914,10 @@ body.is-dragging-task .project-subitems {
   padding: 0;
 }
 
-/* 確保編輯器容器不會溢出影響間距 */
+/* 確保編輯器容器不會溢出影響間距，但保留與上方膠囊區域的間距 */
 .layout-item[data-layout-id="description"] .editor-container {
   margin: 0 !important;
+  margin-top: 24px !important; /* 與文字膠囊區域分開 */
   padding: 0;
 }
 
@@ -3802,27 +3874,365 @@ body.is-dragging-task .project-subitems {
     height: auto;
     min-height: 100vh;
     padding-bottom: 80px; /* 與右下角色同一水平，避免被底部懸浮列遮住 */
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  .project-container.project-mobile {
+    flex-direction: column;
+  }
+
+  /* 樹狀圖按鈕已移至 layout-control 內，與任務模板、版面布局同一行 */
+
+  .project-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 10002;
+  }
+
+  .project-sidebar.project-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    max-width: 320px;
+    z-index: 10003;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 4px 0 0 rgba(0,0,0,0.1);
+  }
+
+  .project-sidebar.project-sidebar-overlay.project-sidebar-open {
+    transform: translateX(0);
+  }
+
+  .project-sidebar-close {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .project-sidebar.project-sidebar-overlay .project-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .project-sidebar .header-buttons {
+    display: none;
   }
 
   .project-sidebar {
     width: 100%;
     padding: 12px;
-    max-height: 40vh;
+    max-height: none;
+    overflow-x: hidden;
+    min-width: 0;
   }
 
-  .project-content {
-    padding: 12px;
-    padding-bottom: 80px !important; /* 與右下角色同一水平，避免被底部懸浮列遮住 */
+  .project-sidebar.project-sidebar-overlay {
+    max-height: none;
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  .project-content,
+  .project-content.project-content-mobile {
+    flex: 1;
+    order: -1;
+    padding: 12px 4px;
+    padding-top: 12px;
+    padding-bottom: 80px !important;
     min-height: 60vh;
+    overflow-x: hidden;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .task-details-container {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .task-tab-content {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  /* 手機版：移除外框（圓角、陰影），讓主要內容區更寬敞 */
+  .project-content .project-welcome,
+  .project-content .task-details,
+  .project-content .task-details-container .task-details {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    max-width: 100% !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    box-sizing: border-box;
+  }
+
+  .task-tab-content .task-details {
+    max-width: 100% !important;
+    padding: 12px 4px !important;
+    box-sizing: border-box;
   }
 
   .gantt-container {
     height: 400px;
+    overflow-x: hidden;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .gantt-container.day-view {
     height: 400px;
     min-height: 400px;
+  }
+
+  .gantt-timeline {
+    overflow-x: hidden !important;
+    min-width: 0 !important;
+    max-width: 100%;
+  }
+
+  .layout-control {
+    flex-wrap: nowrap;
+    padding: 8px 12px 8px 60px; /* 左側留空給懸浮樹狀圖按鈕 */
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .layout-control-tree-toggle {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    color: #555;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    position: fixed !important;
+    top: 12px;
+    left: 12px;
+    z-index: 10001;
+  }
+
+  .layout-control-tree-toggle:hover {
+    background: #f0f2f5;
+  }
+
+  .layout-control-btn-right {
+    margin-left: auto;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: normal;
+    border-radius: 4px;
+    height: 32px;
+    box-sizing: border-box;
+  }
+
+  .layout-control .layout-edit-btn {
+    height: 32px;
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  /* 手機版：移除綠色區隔線（insert-toolbar、task-details-container 編輯模式邊框） */
+  .task-details-container.editing-mode,
+  .editing-mode .insert-toolbar,
+  .project-content .task-details,
+  .project-content .task-details-container .task-details,
+  .insert-toolbar {
+    border: none !important;
+  }
+
+  /* 手機版詳細頁：縮短各功能區塊間隔 */
+  .project-content .layout-item {
+    margin: 8px 0 !important;
+  }
+  .project-content .layout-item[data-layout-id="task-header"] {
+    margin: 4px 0 2px !important;
+  }
+  .project-content .layout-item[data-layout-id="task-properties"] {
+    margin: 2px 0 4px !important;
+  }
+  .project-content .layout-item[data-layout-id="start-date"] {
+    margin-top: 6px !important;
+    margin-bottom: 8px !important;
+  }
+  .project-content .layout-item[data-layout-id="repeat-settings"] {
+    margin-bottom: 6px !important;
+    font-size: 14px;
+  }
+  .project-content .layout-item[data-layout-id="repeat-settings"] label,
+  .project-content .layout-item[data-layout-id="repeat-settings"] select,
+  .project-content .layout-item[data-layout-id="repeat-settings"] input,
+  .project-content .layout-item[data-layout-id="repeat-settings"] button {
+    font-size: 14px !important;
+  }
+  .project-content .layout-item[data-layout-id="repeat-settings"] .task-properties-section > div {
+    flex-wrap: wrap !important;
+  }
+  .project-content .layout-item[data-layout-id="repeat-settings"] .repeat-duration-row {
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .project-content .layout-item[data-layout-id="repeat-settings"] .task-properties-section > div > div:first-child .header-progress-btn {
+    padding: 5px 8px;
+  }
+  .project-content .layout-item[data-layout-id="description"] {
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  /* 手機版：任務描述工具列改為兩行顯示，避免跑出頁面 */
+  .project-content .layout-item[data-layout-id="description"] .editor-container .ql-toolbar {
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+    row-gap: 6px !important;
+  }
+  .project-content .layout-item[data-layout-id="description"] .editor-container .ql-toolbar .ql-formats {
+    flex-wrap: wrap !important;
+  }
+  .project-content .layout-item[data-layout-id="subtasks"] {
+    margin-top: 8px !important;
+  }
+
+  /* 手機版：提前提醒 - 標題與按鈕文字 14px，按鈕兩個一排 */
+  .project-content .layout-item[data-layout-id="reminders"] .group-header label,
+  .project-content .layout-item[data-layout-id="reminders"] .reminder-item .reminder-text,
+  .project-content .layout-item[data-layout-id="reminders"] .link-add-btn {
+    font-size: 14px !important;
+  }
+  .project-content .layout-item[data-layout-id="reminders"] .reminder-section .reminder-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .project-content .layout-item[data-layout-id="reminders"] .reminder-item {
+    min-width: 0;
+  }
+
+  /* 手機版：任務類型、屬性同一行，去掉灰底，字體縮小，屬性下拉縮短 */
+  .project-content .task-properties-section {
+    background: transparent !important;
+    padding: 6px 0 !important;
+    margin-bottom: 4px !important;
+  }
+  .project-content .task-properties-section > div {
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+  }
+  .project-content .task-properties-section > div > div {
+    gap: 4px !important;
+  }
+  .project-content .task-properties-section > div > div:first-child {
+    flex-shrink: 0;
+  }
+  /* 覆蓋 Home.css 的 .fake-input { width: 160px }，讓按鈕跟隨父層 tag-dropdown-container 寬度（25vh） */
+  .project-content .task-properties-section .tag-dropdown-container .fake-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .project-content .task-properties-section .tag-dropdown-container .tag-dropdown {
+    left: 0 !important;
+    right: auto !important;
+    min-width: 150px !important;
+  }
+  .project-content .task-properties-section label,
+  .project-content .task-properties-section select,
+  .project-content .task-properties-section .fake-input {
+    font-size: 14px !important;
+  }
+  .project-content .task-properties-section .fake-input {
+    padding: 6px 8px !important;
+  }
+  .project-content .task-properties-section .fake-input span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .project-content .task-properties-section .fake-input > div {
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0;
+  }
+  .project-content .task-properties-section select {
+    padding: 4px 6px !important;
+  }
+
+  /* 手機版：子任務清單兩個一行 */
+  .project-content .subtasks-list {
+    margin-top: 8px !important;
+    padding: 8px 0 !important;
+  }
+  .project-content .subtasks-list h3 {
+    margin-bottom: 8px !important;
+  }
+  .project-content .subtasks-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* 手機版：文字膠囊模板區 - 避免擠在一起 */
+  .capsules-panel .capsule-designer {
+    padding: 12px !important;
+    margin-top: 12px !important;
+  }
+  .capsules-panel .capsule-designer > div:first-child {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .capsules-panel .capsule-designer .designer-tree .template-node {
+    margin-bottom: 20px !important;
+  }
+  .capsules-panel .capsule-designer .designer-tree > .template-node {
+    margin-left: 0 !important;
+  }
+  .capsules-panel .capsule-designer .template-node-row {
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+  }
+  .capsules-panel .capsule-designer .template-node-input-wrap {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  .capsules-panel .capsule-designer .template-node-input-wrap input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .capsules-panel .capsule-designer .template-node-row > span:first-child {
+    flex-shrink: 0;
+  }
+  .capsules-panel .capsule-designer .template-node-row button {
+    flex-shrink: 0;
+  }
+  .capsules-panel .capsule-designer .template-visual-title {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    margin-bottom: 4px;
+  }
+  .capsules-panel .capsules-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
@@ -3830,6 +4240,7 @@ body.is-dragging-task .project-subitems {
 @media (max-width: 1023px) {
   .project-container {
     padding-bottom: 80px;
+    overflow-x: hidden;
   }
 
   .project-content {

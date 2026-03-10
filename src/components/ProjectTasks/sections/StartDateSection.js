@@ -9,14 +9,17 @@ const StartDateSection = ({
   handleDueDateChange,
   openStartTimePicker,
   openTimePicker,
-  showRepeatPeriodHint
+  showRepeatPeriodHint,
+  isMobile
 }) => {
+  const dateWidth = isMobile ? '95px' : '120px';
+  const timeWidth = isMobile ? '50px' : '100px';
   return (
     <div className="task-datetime-section" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', width: 'max-content', whiteSpace: 'nowrap' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          <div className="date-fake-wrapper" style={{ width: '120px' }}>
-            <div className="fake-input" onClick={() => startDateInputRef.current?.showPicker()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 6, flexWrap: 'nowrap', width: 'max-content', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 6, flexShrink: 0 }}>
+          <div className="date-fake-wrapper" style={{ width: dateWidth }}>
+            <div className="fake-input" onClick={() => startDateInputRef.current?.showPicker()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px', padding: isMobile ? '6px 8px' : undefined }}>
               {formatDateForInput(selectedTask.details?.startDate) || 'YYYY/MM/DD'}
             </div>
             <input
@@ -27,14 +30,14 @@ const StartDateSection = ({
               style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
             />
           </div>
-          <div className="fake-input" onClick={() => openStartTimePicker(selectedTask.id)} style={{ width: '100px', textAlign: 'center' }}>
+          <div className="fake-input" onClick={() => openStartTimePicker(selectedTask.id)} style={{ width: timeWidth, textAlign: 'center', padding: isMobile ? '6px 6px' : undefined }}>
             {selectedTask.details?.startTime || '00:00'}
           </div>
         </div>
         <span style={{ color: '#999', fontWeight: 500, flexShrink: 0 }}>~</span>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          <div className="date-fake-wrapper" style={{ width: '120px' }}>
-            <div className="fake-input" onClick={() => dateInputRef.current?.showPicker()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: isMobile ? 4 : 6, flexShrink: 0 }}>
+          <div className="date-fake-wrapper" style={{ width: dateWidth }}>
+            <div className="fake-input" onClick={() => dateInputRef.current?.showPicker()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px', padding: isMobile ? '6px 8px' : undefined }}>
               {formatDateForInput(selectedTask.details?.dueDate) || 'YYYY/MM/DD'}
             </div>
             <input
@@ -45,7 +48,7 @@ const StartDateSection = ({
               style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
             />
           </div>
-          <div className="fake-input" onClick={() => openTimePicker(selectedTask.id)} style={{ width: '100px', textAlign: 'center' }}>
+          <div className="fake-input" onClick={() => openTimePicker(selectedTask.id)} style={{ width: timeWidth, textAlign: 'center', padding: isMobile ? '6px 6px' : undefined }}>
             {selectedTask.details?.dueTime || '00:00'}
           </div>
         </div>
