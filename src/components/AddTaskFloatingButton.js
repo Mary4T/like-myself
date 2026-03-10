@@ -26,12 +26,12 @@ const btnStyle = {
   boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
 };
 
-const AddTaskFloatingButton = ({ inlineLayout = false }) => {
+const AddTaskFloatingButton = ({ inlineLayout = false, inBottomBar = false }) => {
   const handleClick = () => {
     dispatchOpenAddTask();
   };
 
-  const style = inlineLayout
+  const style = (inlineLayout || inBottomBar)
     ? btnStyle
     : { ...btnStyle, position: 'fixed', top: '60px', left: '12px', zIndex: 9998 };
 

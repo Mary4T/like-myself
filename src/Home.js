@@ -5,12 +5,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
-  IoMail,
-  IoSettings,
-  IoHome,
   IoAdd,
-  IoGameController,
-  IoList,
   IoPerson,
   IoEllipsisHorizontal
 } from 'react-icons/io5';
@@ -181,7 +176,9 @@ const Home = () => {
   const [progressPopupPeriod, setProgressPopupPeriod] = useState(null);
   const [noteTaskDetailPopupTaskId, setNoteTaskDetailPopupTaskId] = useState(null);
   const [noteTaskDeletePopupTaskId, setNoteTaskDeletePopupTaskId] = useState(null);
+  const [isNoteSectionExpanded, setIsNoteSectionExpanded] = useState(false);
   const longPressTimerRef = useRef(null);
+  const noteSectionRef = useRef(null);
 
   const [notificationHistory, setNotificationHistory] = useState(() => {
     // 從 localStorage 讀取通知歷史
@@ -1168,6 +1165,30 @@ useEffect(() => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = () => setIsMobile(mq.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  useEffect(() => {
+    const handleNoteSectionClickOutside = (event) => {
+      if (!noteSectionRef.current || !isNoteSectionExpanded || !isMobile) return;
+      if (!noteSectionRef.current.contains(event.target)) {
+        setIsNoteSectionExpanded(false);
+      }
+    };
+    document.addEventListener('mousedown', handleNoteSectionClickOutside);
+    document.addEventListener('touchstart', handleNoteSectionClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleNoteSectionClickOutside);
+      document.removeEventListener('touchstart', handleNoteSectionClickOutside);
+    };
+  }, [isNoteSectionExpanded, isMobile]);
+
   const handleOpenProjectManagement = useCallback(() => {
     const isDesktop = typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
     if (isDesktop) {
@@ -1178,13 +1199,21 @@ useEffect(() => {
   }, [navigate]);
 
   return (
-    <div className="home-container">
+    <div className={`home-container ${isMobile && isNoteSectionExpanded ? 'note-section-expanded' : ''}`}>
       {/* 上方區域 */}
       <header className="header">
         <div className="header-user-block">
-          <div className="user-info">
-            <span className="username">{userId || '系頭發光體'}</span>
-            <span className="level">LV.{levelInfo.level}</span>
+          <div className="user-info-row">
+            <div className="user-info">
+              <span className="username">{userId || '系頭發光體'}</span>
+              <span className="level">LV.{levelInfo.level}</span>
+            </div>
+            <div className="experience-inline progress-bar-row experience-mobile">
+              <span className="progress-bar-label">經驗值</span>
+              <div className="progress-bar-track" title="經驗值 / 升級所需">
+                <div className="progress-bar orange" style={{ width: `${levelInfo.progressPercent}%`, backgroundColor: '#FF9800' }}></div>
+              </div>
+            </div>
           </div>
           <div className="progress-bars">
             <div className="progress-bar-row progress-bar-clickable" onClick={() => setProgressPopupPeriod('total')} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && setProgressPopupPeriod('total')}>
@@ -1211,7 +1240,7 @@ useEffect(() => {
                 <div className="progress-bar blue" style={{ width: `${dayPercent}%`, backgroundColor: '#52D0FF' }}></div>
               </div>
             </div>
-            <div className="progress-bar-row">
+            <div className="progress-bar-row experience-desktop">
               <span className="progress-bar-label">經驗值</span>
               <div className="progress-bar-track" title="經驗值 / 升級所需">
                 <div className="progress-bar orange" style={{ width: `${levelInfo.progressPercent}%`, backgroundColor: '#FF9800' }}></div>
@@ -1310,16 +1339,6 @@ useEffect(() => {
           </div>
         </div>
       )}
-
-      {/* 側邊按鈕 */}
-      <div className="side-buttons">
-        <button className="mail-btn">
-          <IoMail />
-        </button>
-        <button className="settings-btn" onClick={() => setShowOverviewSettings(prev => !prev)}>
-          <IoSettings />
-        </button>
-      </div>
 
       {/* 總覽設定面板 */}
       {showOverviewSettings && (
@@ -1431,11 +1450,28 @@ useEffect(() => {
 
       {/* 中央區域 */}
       <main className="main-content">
-        <div className="note-section">
+        <div
+          ref={noteSectionRef}
+          className={`note-section ${isMobile && !isNoteSectionExpanded ? 'note-section-collapsed' : ''} ${isMobile && isNoteSectionExpanded ? 'note-section-expanded' : ''}`}
+          onClick={isMobile ? () => setIsNoteSectionExpanded(prev => !prev) : undefined}
+          role={isMobile ? 'button' : undefined}
+          tabIndex={isMobile ? 0 : undefined}
+          onKeyDown={isMobile ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsNoteSectionExpanded(prev => !prev); } } : undefined}
+        >
           <div className="task-list">
-            <h3 className="section-title">便條紙任務</h3>
-            {/* 新任務輸入框 */}
-            <div className="new-task">
+            <div className="note-section-header">
+              <h3 className="section-title">便條紙任務</h3>
+              {isMobile && (
+                <span className="note-section-count">
+                  {!isNoteSectionExpanded ? `共 ${tasks.length + completedTasks.length} 項` : ''}
+                  <span className={`note-section-chevron ${isNoteSectionExpanded ? 'expanded' : ''}`}>▼</span>
+                </span>
+              )}
+            </div>
+            <div className="note-section-expandable">
+            {/* 新任務輸入框（手機版僅展開時顯示） */}
+            {(!isMobile || isNoteSectionExpanded) && (
+            <div className="new-task" onClick={(e) => e.stopPropagation()}>
               <button className="task-check new-task-check">✓</button>
               <input
                 type="text"
@@ -1446,6 +1482,7 @@ useEffect(() => {
                 className="task-input"
               />
             </div>
+            )}
            
             {/* 可拖曳的任務列表 */}
             <DragDropContext onDragEnd={handleDragEnd}>
@@ -1455,7 +1492,6 @@ useEffect(() => {
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
-                      onClick={(e) => e.stopPropagation()}
                       className="note-tasks-grid"
                       style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}
                     >
@@ -1630,6 +1666,7 @@ useEffect(() => {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
 
@@ -1740,26 +1777,6 @@ useEffect(() => {
           </div>
         </div>
       </main>
-
-      {/* 底部導航 */}
-      <nav className="bottom-nav">
-        <button className="home-btn">
-          <IoHome />
-        </button>
-        <button className="add-task-btn">
-          <IoAdd />
-        </button>
-        <button
-          className="project-btn"
-          onClick={() => navigate('/projects')}
-        >
-          <IoList />
-          項目管理
-        </button>
-        <button className="game-btn">
-          <IoGameController />
-        </button>
-      </nav>
 
       {/* 通知組件 */}
       <div className="notifications-container">

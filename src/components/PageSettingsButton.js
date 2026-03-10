@@ -34,7 +34,7 @@ export const setDefaultHomePage = (path) => {
   }
 };
 
-const PageSettingsButton = ({ inlineLayout = false }) => {
+const PageSettingsButton = ({ inlineLayout = false, inBottomBar = false }) => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -60,7 +60,7 @@ const PageSettingsButton = ({ inlineLayout = false }) => {
     }
   };
 
-  const btnStyle = inlineLayout
+  const btnStyle = (inlineLayout || inBottomBar)
     ? {
         width: '40px',
         height: '40px',
@@ -108,9 +108,9 @@ const PageSettingsButton = ({ inlineLayout = false }) => {
       {open && (
         <div
           style={{
-            position: inlineLayout ? 'absolute' : 'fixed',
-            top: inlineLayout ? 'calc(100% + 6px)' : '58px',
-            left: inlineLayout ? 0 : '12px',
+            position: (inlineLayout || inBottomBar) ? 'absolute' : 'fixed',
+            top: (inlineLayout || inBottomBar) ? 'calc(100% + 6px)' : '58px',
+            left: (inlineLayout || inBottomBar) ? 0 : '12px',
             zIndex: 10000,
             background: 'white',
             border: '1px solid #e1e5e9',

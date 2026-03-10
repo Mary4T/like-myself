@@ -82,3 +82,11 @@
   border-bottom: 2px solid #fff;
   transform: rotate(-45deg) translateY(-1px);
 }
+
+/* ========== 手機版排版 (max-width: 768px) ========== */
+@media (max-width: 768px) {
+  .unified-calendar-page {
+    padding: 12px;
+    padding-left: 12px;
+  }
+}

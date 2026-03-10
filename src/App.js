@@ -53,20 +53,6 @@ const ResponsiveLayout = () => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [navOpen]);
 
-  if (!isDesktop) {
-    return (
-      <>
-        <PageSettingsButton />
-        <AddTaskFloatingButton />
-        <CharacterButton />
-        <GlobalAddTaskModal />
-        <MobileSwipeLayout>
-          <Outlet />
-        </MobileSwipeLayout>
-      </>
-    );
-  }
-
   const leftBtnStyle = {
     width: '40px',
     height: '40px',
@@ -82,6 +68,54 @@ const ResponsiveLayout = () => {
     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
     textDecoration: 'none'
   };
+
+  if (!isDesktop) {
+    return (
+      <>
+        <CharacterButton />
+        <GlobalAddTaskModal />
+        <MobileSwipeLayout>
+          <Outlet />
+        </MobileSwipeLayout>
+        <nav className="mobile-bottom-bar">
+          <NavLink
+            to={getDefaultHomePage()}
+            className="mobile-bottom-btn"
+            style={leftBtnStyle}
+            title="首頁"
+          >
+            <IoHomeOutline />
+          </NavLink>
+          <div ref={navRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className="mobile-bottom-btn"
+              style={leftBtnStyle}
+              onClick={() => setNavOpen(prev => !prev)}
+              title="導航"
+            >
+              <IoRocketOutline />
+            </button>
+            {navOpen && (
+              <div className="mobile-nav-dropdown">
+                <NavLink to="/" end className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`} onClick={() => setNavOpen(false)}>
+                  總覽
+                </NavLink>
+                <NavLink to="/total-calendar" className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`} onClick={() => setNavOpen(false)}>
+                  總日曆
+                </NavLink>
+                <NavLink to="/projects" className={({ isActive }) => `desktop-nav-link ${isActive ? 'active' : ''}`} onClick={() => setNavOpen(false)}>
+                  項目管理
+                </NavLink>
+              </div>
+            )}
+          </div>
+          <AddTaskFloatingButton inBottomBar />
+          <PageSettingsButton inBottomBar />
+        </nav>
+      </>
+    );
+  }
 
   return (
     <div className="desktop-shell">

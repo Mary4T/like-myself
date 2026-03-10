@@ -3795,3 +3795,45 @@ body.is-dragging-task .project-subitems {
   padding: 8px 0;
 }
 
+/* ========== 手機版排版 (max-width: 768px) ========== */
+@media (max-width: 768px) {
+  .project-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 80px; /* 與右下角色同一水平，避免被底部懸浮列遮住 */
+  }
+
+  .project-sidebar {
+    width: 100%;
+    padding: 12px;
+    max-height: 40vh;
+  }
+
+  .project-content {
+    padding: 12px;
+    padding-bottom: 80px !important; /* 與右下角色同一水平，避免被底部懸浮列遮住 */
+    min-height: 60vh;
+  }
+
+  .gantt-container {
+    height: 400px;
+  }
+
+  .gantt-container.day-view {
+    height: 400px;
+    min-height: 400px;
+  }
+}
+
+/* 平板/手機：底部留白與右下角色同一水平，避免被懸浮列遮住（與 App.css 1023px 斷點一致） */
+@media (max-width: 1023px) {
+  .project-container {
+    padding-bottom: 80px;
+  }
+
+  .project-content {
+    padding-bottom: 80px !important;
+  }
+}
+

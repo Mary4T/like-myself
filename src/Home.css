@@ -29,11 +29,19 @@
   min-width: 0;
 }
 
+.user-info-row {
+  margin-bottom: 10px;
+}
+
 .user-info {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 10px;
+}
+
+/* 手機版：經驗值在 ID 同行右側 */
+.experience-mobile {
+  display: none;
 }
 
 .username {
@@ -157,39 +165,6 @@
 
 .avatar-character-icon {
   font-size: 36px;
-  color: #52D0FF;
-}
-
-/* 側邊按鈕 */
-.side-buttons {
-  position: fixed;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 100;
-}
-
-.side-buttons button {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  background-color: white;
-  color: #71798B;
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.side-buttons button:hover {
-  transform: scale(1.1);
   color: #52D0FF;
 }
 
@@ -1054,58 +1029,6 @@
   border-radius: 4px;
   outline: none;
   font-size: 14px;
-}
-
-/* 底部導航 */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-around;
-  padding: 12px 15px;
-  background-color: white;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-  z-index: 100;
-}
-
-.bottom-nav button {
-  background: none;
-  border: none;
-  color: #71798B;
-  font-size: 24px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.bottom-nav button:hover {
-  color: #52D0FF;
-  transform: translateY(-2px);
-}
-
-.project-btn {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  color: #71798B;
-  font-size: 14px;
-}
-
-.project-btn svg {
-  font-size: 20px;
-  margin-bottom: 0;
-}
-
-.project-btn:hover {
-  color: #52D0FF;
-}
-
-@media (min-width: 1024px) {
-  .bottom-nav {
-    display: none;
-  }
 }
 
 /* 通知樣式 */
@@ -2429,4 +2352,541 @@ input[type="time"]::-ms-clear { display: none; }
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* ========== 手機版排版 (max-width: 768px) ========== */
+@media (max-width: 768px) {
+  .header {
+    flex-shrink: 0;
+    padding: 12px;
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+    gap: 10px;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .header-user-block {
+    min-width: 0;
+  }
+
+  .user-info-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    width: 100%;
+    margin-bottom: 6px;
+    align-items: center;
+  }
+
+  .user-info-row .user-info {
+    grid-column: 1;
+  }
+
+  .experience-mobile {
+    display: flex;
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .experience-desktop {
+    display: none !important;
+  }
+
+  .username {
+    font-size: 16px;
+  }
+
+  .level {
+    font-size: 12px;
+  }
+
+  .progress-bars {
+    max-width: none;
+    gap: 6px 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .progress-bar-row {
+    gap: 6px;
+  }
+
+  .progress-bar-label {
+    font-size: 12px;
+    min-width: 52px;
+  }
+
+  .progress-bar-track {
+    height: 6px;
+  }
+
+  .avatar-container {
+    display: none;
+  }
+
+  .home-container {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  main {
+    padding: 12px;
+    padding-bottom: 0px !important;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .home-container::after {
+    content: '';
+    display: block;
+    height: 140px;
+    flex-shrink: 0;
+  }
+
+  /* 便條紙任務、項目管理：上下排列，整頁可滾動 */
+  .main-content {
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 12px;
+    min-width: 0;
+    max-width: 100%;
+    flex: 0 0 auto;
+    min-height: auto;
+    margin-bottom: 0;
+    overflow: visible;
+  }
+
+  .home-container .main-content .note-section,
+  .home-container .main-content .project-section {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-container .main-content .note-section {
+    overflow-y: hidden;
+  }
+
+  .home-container .main-content .project-section {
+    overflow: visible;
+  }
+
+  /* 手機版項目管理區域：移除外框、任務無限延伸、無滾動 */
+  .home-container .main-content .project-section {
+    flex: 0 0 auto;
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 8px 0 0 0;
+    min-height: auto;
+    max-height: none !important;
+    overflow: visible !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .home-container .main-content .project-section::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 標題在原位，顯示任務移到右側 */
+  .project-section .project-section-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+    min-width: 0;
+  }
+
+  .project-section .project-section-header-row .section-title {
+    margin-right: 8px;
+  }
+
+  /* 手機版：顯示任務按鈕改為純文字樣式 */
+  .project-section .project-source-btn {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin-top: 4px;
+    color: #888;
+    font-size: 12px;
+  }
+
+  .project-section .project-source-btn:hover {
+    background: transparent;
+  }
+
+  .home-container .main-content .note-section .section-title,
+  .home-container .main-content .project-section .section-title {
+    margin-bottom: 6px;
+    padding-bottom: 3px;
+    font-size: 14px;
+  }
+
+  /* 手機版便條紙區域：無圓角、可展開收起、整個可點、不滾動、以畫面為最大範圍 */
+  .home-container .main-content .note-section {
+    border-radius: 0 !important;
+    cursor: pointer;
+    overflow: hidden !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .home-container .main-content .note-section::-webkit-scrollbar,
+  .home-container .main-content .note-section .task-list::-webkit-scrollbar,
+  .home-container .main-content .note-section .note-section-expandable::-webkit-scrollbar {
+    display: none;
+  }
+
+  .home-container .main-content .note-section .task-list,
+  .home-container .main-content .note-section .note-section-expandable {
+    overflow: hidden !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* 收起：固定高度 40vh，顯示任務列表，不滾動 */
+  .home-container .main-content .note-section.note-section-collapsed {
+    flex: 0 0 auto;
+    height: 40vh;
+    min-height: 40vh;
+    max-height: 40vh;
+    overflow: hidden !important;
+    padding: 8px 10px;
+  }
+
+  /* 展開：依任務數量向下延伸，整頁可滾動，便條紙區無滾動條 */
+  .home-container .main-content .note-section.note-section-expanded {
+    flex: 0 0 auto;
+    min-height: auto;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .home-container .main-content .note-section.note-section-expanded .task-list,
+  .home-container .main-content .note-section.note-section-expanded .note-section-expandable {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    flex: 0 0 auto !important;
+  }
+
+  .home-container .main-content .note-section.note-section-expanded .note-section-expandable {
+    flex: 0 0 auto !important;
+    min-height: min-content;
+  }
+
+  .home-container .main-content .note-section.note-section-expanded .completed-tasks-section {
+    overflow: visible;
+    flex-shrink: 0;
+  }
+
+  /* 展開時 main-content 與 home-container 允許整頁滾動，項目管理區向下移動 */
+  .home-container.note-section-expanded {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .home-container.note-section-expanded main,
+  .home-container.note-section-expanded .main-content {
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .home-container.note-section-expanded .main-content .note-section.note-section-expanded {
+    overflow-y: visible;
+    flex: 0 0 auto;
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .home-container.note-section-expanded .main-content .project-section {
+    flex: 0 0 auto !important;
+    min-height: auto !important;
+    overflow-y: visible;
+    align-self: stretch;
+    width: 100%;
+  }
+
+  .home-container .main-content .note-section .note-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .home-container .main-content .note-section .note-section-header .section-title {
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .home-container .main-content .note-section .note-section-count {
+    font-size: 12px;
+    color: #8b95a3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .home-container .main-content .note-section .note-section-chevron {
+    font-size: 10px;
+    transition: transform 0.2s;
+  }
+
+  .home-container .main-content .note-section .note-section-chevron.expanded {
+    transform: rotate(180deg);
+  }
+
+  .note-section .task-list,
+  .project-section .project-task-list {
+    min-width: 0;
+  }
+
+  .note-section .new-task {
+    margin-bottom: 6px;
+  }
+
+  .note-section .note-tasks-grid:not(.completed-tasks) {
+    margin-bottom: 6px;
+  }
+
+  /* 便條紙任務：一任務一排（覆蓋 inline style，含已完成任務） */
+  .note-section .note-tasks-grid,
+  .note-section .completed-tasks.note-tasks-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+
+  .note-section .note-tasks-grid .task {
+    width: 100%;
+    min-width: 0;
+    padding: 5px 6px;
+    box-sizing: border-box;
+  }
+
+  /* 便條紙任務：任務名稱置左、截止倒數置右，有空間則同一排 */
+  .note-section .note-task-content {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .note-section .task-text {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .note-section .note-task-countdown {
+    flex-shrink: 0;
+    margin-top: 0;
+    margin-left: auto;
+  }
+
+  /* 已完成任務：任務名稱置左、完成日期置右 */
+  .note-section .task.task-completed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .note-section .task.task-completed .task-text {
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .note-section .task.task-completed .task-completed-time {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  /* 項目管理：向下延伸，區塊內滾動 */
+  .project-section .project-tasks-grid {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    overflow: visible;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .project-section .project-source-picker {
+    min-width: 0;
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .project-section .project-source-btn {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .project-section .project-task-card {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+
+  .project-task-card {
+    min-height: auto;
+    padding: 6px 8px;
+  }
+
+  .project-section .task-card-header {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .project-section .task-card-header .task-card-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .project-task-card .task-card-progress {
+    margin-bottom: 3px !important;
+  }
+
+  .project-task-card .task-card-subtasks {
+    margin-bottom: 3px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    min-width: 0;
+  }
+
+  .task-card-title {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .project-section .task-card-footer {
+    min-width: 0;
+    overflow: hidden;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .project-section .project-task-list,
+  .project-section .project-tasks-grid {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* 手機版：任務彈窗符合版面，不被底部懸浮列擋住 */
+  .task-modal-overlay {
+    padding: 12px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); /* 56px 底部導航列 + 16px 間距 */
+    align-items: flex-start;
+    box-sizing: border-box;
+  }
+
+  .task-modal {
+    width: 100%;
+    max-width: 100%;
+    padding: 16px;
+    max-height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .task-modal-header {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    min-width: 0;
+  }
+
+  .task-modal-title {
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .task-modal-title .task-number-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-modal-actions {
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .task-modal-actions .header-progress-btn,
+  .task-modal-actions .header-complete-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .task-number-input {
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .task-modal-content {
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .project-source-dropdown {
+    max-height: 50vh;
+  }
+
+  .notifications-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .custom-notification {
+    min-width: auto;
+  }
+
 }

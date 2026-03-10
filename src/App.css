@@ -67,4 +67,48 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
-  
+/* 手機版底部導航（首頁、導航、新增任務、設定）- 與 isDesktop 1024px 斷點一致 */
+.mobile-bottom-bar {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .mobile-bottom-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: #fff;
+    border-top: 1px solid #e8edf2;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px;
+    z-index: 9999;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+  }
+
+  .mobile-nav-dropdown {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 140px;
+    background: #fff;
+    border: 1px solid #e8edf2;
+    border-radius: 10px;
+    padding: 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    z-index: 10001;
+  }
+
+  .mobile-nav-dropdown .desktop-nav-link {
+    display: block;
+  }
+
+  /* 人物圖示上移，避免與底部導航列重疊 */
+  .character-floating-btn {
+    bottom: 60px !important;
+  }
+}
