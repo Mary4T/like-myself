@@ -217,11 +217,37 @@ export const isTaskProgressCurrentPeriodStyle = (task) => {
 export const updateTaskInTreeWithRepeatLogPropagation = (list, taskId, updater) => {
   if (!Array.isArray(list)) return list;
   const targetStr = String(taskId);
+  const updateRepeatLogForTask = (t) => {
+    const rep = t.details?.repeat;
+    const enabled = rep && (rep.enabled === true || rep.enabled === 'true');
+    if (!enabled) return t;
+    const now = new Date();
+    const currentKey = getLocalDateKeyForRepeat(t, now);
+    const nextLog = { ...(t.details?.repeatLog || {}) };
+    const isCompleted = t.status === 'completed' || t.completed === true;
+    const progressVal = typeof t.details?.progress === 'number' ? t.details.progress : (isCompleted ? 100 : 0);
+    const createSnapshot = (x) => ({
+      id: x.id, title: x.title, status: x.status,
+      completed: x.status === 'completed' || x.completed === true,
+      children: x.children ? x.children.map(createSnapshot) : []
+    });
+    const snapshot = (t.children?.length) ? t.children.map(createSnapshot) : [];
+    const existing = nextLog[currentKey];
+    nextLog[currentKey] = {
+      completed: isCompleted || (existing?.completed || false),
+      completedAt: isCompleted ? (existing?.completedAt || new Date().toISOString()) : (existing?.completedAt || null),
+      maxProgress: Math.max(existing?.maxProgress || 0, Math.max(0, Math.min(100, progressVal))),
+      recordedAt: existing?.recordedAt || new Date().toISOString(),
+      taskSnapshot: snapshot
+    };
+    return { ...t, details: { ...t.details, repeatLog: nextLog } };
+  };
+
   return list.map((task) => {
     if (String(task.id) === targetStr) {
       let updated = updater(task);
       if (updated.details) updated.details.progress = calculateTaskProgress(updated);
-      return updated;
+      return updateRepeatLogForTask(updated);
     }
     if (task.children?.length) {
       const updatedChildren = updateTaskInTreeWithRepeatLogPropagation(task.children, taskId, updater);

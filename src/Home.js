@@ -946,8 +946,8 @@ useEffect(() => {
     if (!selectedTask) return;
     const { _editingTimeField, ...cleanTask } = selectedTask;
     
-    // 更新本地狀態（樹狀）
-    setProjectTaskTree(prev => updateTaskInTree(prev, cleanTask.id, () => cleanTask));
+    // 更新本地狀態（樹狀，含 repeatLog 更新）
+    setProjectTaskTree(prev => TaskUtils.updateTaskInTreeWithRepeatLogPropagation(prev, cleanTask.id, () => cleanTask));
     
     // 保存到 localStorage
     try {
@@ -955,7 +955,7 @@ useEffect(() => {
       if (savedProjectTasks) {
         const parsed = JSON.parse(savedProjectTasks);
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].children) {
-          const updatedProjectTasks = updateTaskInTree(parsed[0].children || [], cleanTask.id, () => cleanTask);
+          const updatedProjectTasks = TaskUtils.updateTaskInTreeWithRepeatLogPropagation(parsed[0].children || [], cleanTask.id, () => cleanTask);
           const newProjectData = [
             {
               ...parsed[0],
@@ -986,29 +986,45 @@ useEffect(() => {
     localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
   }, [completedTasks]);
 
-  // 載入項目管理任務，並執行重複任務重置（新週期時更新 repeatLog）
-  useEffect(() => {
+  // 載入項目管理任務並執行重複任務重置（新週期時更新 repeatLog）
+  const loadAndResetProjectTasks = useCallback(() => {
     try {
       const savedProjectTasks = localStorage.getItem('projectTasks');
-      if (savedProjectTasks) {
-        const parsed = JSON.parse(savedProjectTasks);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const reset = resetProjectTasksIfNeeded(parsed);
-          if (reset !== parsed) {
-            try {
-              localStorage.setItem('projectTasks', JSON.stringify(reset));
-            } catch (e) {
-              console.error('Error saving reset project tasks:', e);
-            }
-          }
-          const children = reset[0]?.children ?? parsed[0]?.children ?? [];
-          setProjectTaskTree(children);
+      if (!savedProjectTasks) return;
+      const parsed = JSON.parse(savedProjectTasks);
+      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      const reset = resetProjectTasksIfNeeded(parsed);
+      if (reset !== parsed) {
+        try {
+          localStorage.setItem('projectTasks', JSON.stringify(reset));
+          window.dispatchEvent(new Event(PROJECT_TASKS_UPDATED_EVENT));
+        } catch (e) {
+          console.error('Error saving reset project tasks:', e);
         }
       }
+      const children = reset[0]?.children ?? parsed[0]?.children ?? [];
+      setProjectTaskTree(children);
     } catch (error) {
       console.error('Error loading project tasks:', error);
     }
   }, []);
+
+  useEffect(() => {
+    loadAndResetProjectTasks();
+  }, [loadAndResetProjectTasks]);
+
+  // 定期檢查 + 頁面可見時重新執行重置（跨日後即時更新）
+  useEffect(() => {
+    const timer = setInterval(loadAndResetProjectTasks, 60000); // 每分鐘
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') loadAndResetProjectTasks();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [loadAndResetProjectTasks]);
 
   // 监听项目管理任务的变化
   useEffect(() => {
@@ -1018,11 +1034,18 @@ useEffect(() => {
         if (savedProjectTasks) {
           const parsed = JSON.parse(savedProjectTasks);
           if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].children) {
-            setProjectTaskTree(parsed[0].children || []);
-            
+            const reset = resetProjectTasksIfNeeded(parsed);
+            const children = reset[0]?.children ?? parsed[0]?.children ?? [];
+            setProjectTaskTree(children);
+            if (reset !== parsed) {
+              try {
+                localStorage.setItem('projectTasks', JSON.stringify(reset));
+              } catch (e) { /* ignore */ }
+            }
+
             // 如果當前選中的任務在彈窗中，同步更新其描述
             if (selectedTask && showTaskModal) {
-              const updatedTask = findTaskByIdInTree(parsed[0].children || [], selectedTask.id);
+              const updatedTask = findTaskByIdInTree(children, selectedTask.id);
               if (updatedTask) {
                 setSelectedTask(prev => ({
                   ...prev,
@@ -1073,14 +1096,15 @@ useEffect(() => {
   useEffect(() => {
     if (!showTaskModal || !selectedTask || !selectedTask.level) return;
     const { _editingTimeField, ...cleanTask } = selectedTask;
-    setProjectTaskTree(prev => updateTaskInTree(prev, cleanTask.id, () => cleanTask));
+    setProjectTaskTree(prev => TaskUtils.updateTaskInTreeWithRepeatLogPropagation(prev, cleanTask.id, () => cleanTask));
     try {
       const savedProjectTasks = localStorage.getItem('projectTasks');
       if (!savedProjectTasks) return;
       const parsed = JSON.parse(savedProjectTasks);
       if (!(Array.isArray(parsed) && parsed.length > 0 && parsed[0].children)) return;
-      const updatedProjectTasks = updateTaskInTree(parsed[0].children || [], cleanTask.id, () => cleanTask);
+      const updatedProjectTasks = TaskUtils.updateTaskInTreeWithRepeatLogPropagation(parsed[0].children || [], cleanTask.id, () => cleanTask);
       localStorage.setItem('projectTasks', JSON.stringify([{ ...parsed[0], children: updatedProjectTasks }]));
+      window.dispatchEvent(new Event(PROJECT_TASKS_UPDATED_EVENT));
     } catch (error) {
       console.error('Error auto-saving project task:', error);
     }
@@ -1985,14 +2009,20 @@ useEffect(() => {
                           <button
                             className={`home-subtask-check ${subtask.status === 'completed' ? 'completed' : ''}`}
                             onClick={() => {
-                              setSelectedTask(prev => ({
-                                ...prev,
-                                children: (prev.children || []).map(c => (
+                              setSelectedTask(prev => {
+                                const nextChildren = (prev.children || []).map(c =>
                                   c.id === subtask.id
                                     ? { ...c, status: c.status === 'completed' ? 'pending' : 'completed' }
                                     : c
-                                ))
-                              }));
+                                );
+                                const realChildren = nextChildren.filter(s => s && !s.isPlaceholder && !s.isPlaceholderHeader);
+                                const allCompleted = realChildren.length > 0 && realChildren.every(s => s.status === 'completed' || s.completed);
+                                return {
+                                  ...prev,
+                                  children: nextChildren,
+                                  ...(allCompleted ? { status: 'completed', completed: true } : {})
+                                };
+                              });
                             }}
                           >
                             {subtask.status === 'completed' ? '✓' : ''}

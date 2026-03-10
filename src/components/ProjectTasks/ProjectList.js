@@ -442,6 +442,24 @@ const ProjectList = () => {
     });
   }, []);
 
+  // 初次載入時執行重複任務重置（跨日後即時更新）
+  useEffect(() => {
+    const saved = localStorage.getItem('projectTasks');
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      const reset = parsed.map(t => resetTaskTreeIfNeeded(t, parsed));
+      if (JSON.stringify(reset) !== JSON.stringify(parsed)) {
+        localStorage.setItem('projectTasks', JSON.stringify(reset));
+        window.dispatchEvent(new CustomEvent(PROJECT_TASKS_UPDATED_EVENT));
+        setTasks(reset);
+      }
+    } catch (e) {
+      console.error('Error applying reset on load:', e);
+    }
+  }, []);
+
   // --- 3. 封包化 Hooks ---
   const selectedTask = useMemo(() => TaskUtils.findTaskById(tasks, selectedTaskId), [tasks, selectedTaskId]);
   const capsuleManager = useTaskCapsules(selectedTaskId, updateTasksAndSave);
@@ -518,6 +536,10 @@ const ProjectList = () => {
             let newTask = { ...task, children: updatedChildren };
             if (newTask.details) newTask.details.progress = TaskUtils.calculateTaskProgress(newTask);
             newTask = updateCurrentWindowLog(newTask);
+            const realChildren = (newTask.children || []).filter(c => c && !c.isPlaceholder && !c.isPlaceholderHeader);
+            if (realChildren.length > 0 && realChildren.every(c => c.status === 'completed' || c.completed)) {
+              newTask = { ...newTask, status: 'completed', completed: true };
+            }
             return newTask;
           }
         }
@@ -1078,9 +1100,17 @@ const ProjectList = () => {
   }, []);
   useEffect(() => () => { document.body.classList.remove('is-dragging-task'); }, []);
   useEffect(() => {
-    const timer = setInterval(() => { updateTasksAndSave(prev => prev.map(t => resetTaskTreeIfNeeded(t, prev))); }, 10000);
-    return () => clearInterval(timer);
-  }, [updateTasksAndSave, getLocalDateKey]);
+    const runReset = () => updateTasksAndSave(prev => prev.map(t => resetTaskTreeIfNeeded(t, prev)));
+    const timer = setInterval(runReset, 10000);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') runReset();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [updateTasksAndSave]);
 
   // --- 9. 渲染輔助 ---
   const renderTaskVisual = (task) => {
