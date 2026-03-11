@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { IoClose } from 'react-icons/io5';
 
 const AddTaskModal = ({ 
@@ -72,11 +73,11 @@ const AddTaskModal = ({
     return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  return (
-    <div className="modal-overlay" style={{ zIndex: 10001 }} onClick={onClose}>
+  const modalContent = (
+    <div className="modal-overlay add-task-modal" style={{ zIndex: 10005 }} onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>新增任務</h3>
+        <div className="modal-header add-task-modal-header">
+          <h3 className="add-task-modal-title">新增任務</h3>
           <button className="close-btn" onClick={onClose}><IoClose /></button>
         </div>
         <div className="modal-body">
@@ -88,8 +89,8 @@ const AddTaskModal = ({
               placeholder="輸入任務標題..." autoFocus
             />
           </div>
-          <div className="form-group" style={{ marginBottom: '10px' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', width: 'max-content', maxWidth: '100%' }}>
+          <div className="form-group add-task-date-time" style={{ marginBottom: '10px' }}>
+            <div className="add-task-date-time-inner" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', width: 'max-content', maxWidth: '100%' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                 <div className="date-fake-wrapper" style={{ width: '120px' }}>
                   <div className="fake-input" onClick={() => startDateInputRef.current?.showPicker()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>
@@ -103,7 +104,7 @@ const AddTaskModal = ({
                     style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
                   />
                 </div>
-                <div className="fake-input" onClick={() => document.getElementById('new-task-start-time')?.showPicker?.()} style={{ width: '100px', textAlign: 'center' }}>
+                <div className="fake-input add-task-time-input" onClick={() => document.getElementById('new-task-start-time')?.showPicker?.()} style={{ width: '100px', textAlign: 'center' }}>
                   {newTask.startTime || '00:00'}
                 </div>
                 <input
@@ -128,7 +129,7 @@ const AddTaskModal = ({
                     style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
                   />
                 </div>
-                <div className="fake-input" onClick={() => document.getElementById('new-task-due-time')?.showPicker?.()} style={{ width: '100px', textAlign: 'center' }}>
+                <div className="fake-input add-task-time-input" onClick={() => document.getElementById('new-task-due-time')?.showPicker?.()} style={{ width: '100px', textAlign: 'center' }}>
                   {newTask.dueTime || '23:59'}
                 </div>
                 <input
@@ -141,11 +142,12 @@ const AddTaskModal = ({
               </div>
             </div>
           </div>
-          <div className="form-group" style={{ marginBottom: '8px' }}>
+          <div className="form-group add-task-description-group" style={{ marginBottom: '8px' }}>
             <textarea 
               value={newTask.description}
               onChange={e => setNewTask({...newTask, description: e.target.value})}
               placeholder="任務描述 (可選)"
+              className="add-task-description-textarea"
               style={{
                 width: '100%',
                 minHeight: '80px',
@@ -161,7 +163,7 @@ const AddTaskModal = ({
               <label style={{ margin: 0, fontSize: '13px' }}>父任務</label>
               <div ref={parentDropdownRef} style={{ position: 'relative' }}>
                 <div
-                  className="fake-input"
+                  className="fake-input add-task-dropdown-input"
                   onClick={() => { setParentDropdownOpen(prev => !prev); setLayoutDropdownOpen(false); setAttrDropdownOpen(false); }}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '34px', padding: '0 12px', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', background: '#fff', fontSize: '13px' }}
                 >
@@ -169,7 +171,7 @@ const AddTaskModal = ({
                   <span style={{ fontSize: '10px', color: '#999' }}>▼</span>
                 </div>
                 {parentDropdownOpen && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: 'white', border: '1px solid #E8EDF2', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 1000, maxHeight: '220px', overflowY: 'auto', textAlign: 'left' }}>
+                  <div className="add-task-dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: 'white', border: '1px solid #E8EDF2', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10010, maxHeight: '220px', overflowY: 'auto', textAlign: 'left' }}>
                     <div onClick={() => { setSelectedParent('root'); setParentDropdownOpen(false); }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', textAlign: 'left' }}>
                       根目錄
                     </div>
@@ -198,7 +200,7 @@ const AddTaskModal = ({
               <label style={{ margin: 0, fontSize: '13px' }}>版面模板</label>
               <div ref={layoutDropdownRef} style={{ position: 'relative' }}>
                 <div
-                  className="fake-input"
+                  className="fake-input add-task-dropdown-input"
                   onClick={() => { setLayoutDropdownOpen(prev => !prev); setParentDropdownOpen(false); setAttrDropdownOpen(false); }}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '34px', padding: '0 12px', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', background: '#fff', fontSize: '13px' }}
                 >
@@ -206,7 +208,7 @@ const AddTaskModal = ({
                   <span style={{ fontSize: '10px', color: '#999' }}>▼</span>
                 </div>
                 {layoutDropdownOpen && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: 'white', border: '1px solid #E8EDF2', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 1000, maxHeight: '220px', overflowY: 'auto', textAlign: 'left' }}>
+                  <div className="add-task-dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: 'white', border: '1px solid #E8EDF2', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10010, maxHeight: '220px', overflowY: 'auto', textAlign: 'left' }}>
                     <div onClick={() => { setNewTask({ ...newTask, layoutTemplateId: '' }); setLayoutDropdownOpen(false); }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', textAlign: 'left' }}>
                       不套用模板（使用預設）
                     </div>
@@ -223,7 +225,7 @@ const AddTaskModal = ({
               <label style={{ margin: 0, fontSize: '13px' }}>任務屬性</label>
               <div ref={attrDropdownRef} style={{ position: 'relative' }}>
                 <div
-                  className="fake-input"
+                  className="fake-input add-task-dropdown-input"
                   onClick={() => { setAttrDropdownOpen(prev => !prev); setParentDropdownOpen(false); setLayoutDropdownOpen(false); }}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '34px', padding: '0 12px', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', background: '#fff', fontSize: '13px' }}
                 >
@@ -236,7 +238,7 @@ const AddTaskModal = ({
                   </div>
                 </div>
                 {attrDropdownOpen && (
-                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: 'white', border: '1px solid #E8EDF2', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 1000, maxHeight: '220px', overflowY: 'auto', textAlign: 'left' }}>
+                  <div className="add-task-dropdown-menu" style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '4px', background: 'white', border: '1px solid #E8EDF2', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 10010, maxHeight: '220px', overflowY: 'auto', textAlign: 'left' }}>
                     <div onClick={() => { setNewTask({ ...newTask, tagId: '__inherit__' }); setAttrDropdownOpen(false); }} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', textAlign: 'left' }}>
                       沿用父任務（{selectedParentTask?.title || '根目錄'}）
                     </div>
@@ -262,6 +264,8 @@ const AddTaskModal = ({
       </div>
     </div>
   );
+
+  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default AddTaskModal;

@@ -110,3 +110,20 @@
   .upload-option:hover {
     background: #eee;
   }
+
+/* 手機版：彈出視窗使用 fixed 定位，避免被版面裁切 */
+@media (max-width: 768px) {
+  .icon-selector-popup {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    right: auto !important;
+    margin-top: 0 !important;
+    z-index: 10010 !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+  .icon-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}

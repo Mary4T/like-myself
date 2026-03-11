@@ -4036,22 +4036,176 @@ body.is-dragging-task .project-subitems {
     background: #f0f2f5;
   }
 
+  /* 新增任務彈窗：手機版緊湊版面，無滾動，單一畫面 */
+  .add-task-modal .add-task-modal-title {
+    display: none !important;
+  }
+  .add-task-modal .add-task-modal-header {
+    padding: 4px 12px 6px !important;
+    border-bottom: none !important;
+    justify-content: flex-end !important;
+    min-height: 0 !important;
+  }
+  .add-task-modal .modal-body {
+    padding-top: 8px !important;
+  }
+  .add-task-modal {
+    padding-top: 4px !important;
+    padding-bottom: 24px !important;
+  }
+  .add-task-modal .modal-content {
+    width: min(92%, calc(100vw - 24px)) !important;
+    max-width: min(92%, calc(100vw - 24px)) !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+    max-height: 95vh !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+  }
+  .add-task-modal .modal-body {
+    padding: 12px 16px !important;
+    overflow: visible !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  .add-task-modal .modal-body .form-group,
+  .add-task-modal .modal-body .add-task-date-time {
+    margin-bottom: 8px !important;
+  }
+  .add-task-modal .add-task-description-textarea {
+    min-height: 44px !important;
+    padding: 6px 8px !important;
+  }
+  .add-task-modal .form-group label {
+    margin-bottom: 4px !important;
+  }
+  .add-task-modal .form-group input[type="text"] {
+    padding: 6px 8px !important;
+    box-sizing: border-box !important;
+  }
+  /* 任務名稱、任務描述輸入區水平全長 */
+  .add-task-modal .modal-body > .form-group:first-child input,
+  .add-task-modal .modal-body > .form-group.add-task-description-group textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .add-task-modal .modal-body > div:last-of-type {
+    margin-top: 2px !important;
+    row-gap: 6px !important;
+    margin-bottom: 0 !important;
+  }
+  .add-task-modal .add-task-dropdown-input {
+    height: 30px !important;
+    padding: 0 10px !important;
+    font-size: 13px !important;
+  }
+  .add-task-modal .modal-body > div:last-of-type > div {
+    min-height: 30px !important;
+  }
+  .add-task-modal .modal-footer {
+    padding: 10px 16px !important;
+    border-top: 1px solid #eee;
+    flex-shrink: 0 !important;
+  }
+
+  /* 新增任務彈窗：下拉選單不裁切，限制高度並確保可捲動 */
+  .add-task-modal .add-task-dropdown-menu {
+    max-height: min(220px, 40vh) !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .add-task-modal {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 12px 12px 24px !important;
+    box-sizing: border-box !important;
+  }
+  .add-task-modal .modal-content,
+  .add-task-modal .modal-body,
+  .add-task-modal .modal-body > div {
+    overflow: visible !important;
+  }
+
+  /* 新增任務彈窗：日期時間按鈕貼合文字，不縮減文字 */
+  .add-task-modal .add-task-date-time-inner {
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    row-gap: 8px;
+  }
+  .add-task-modal .add-task-date-time .date-fake-wrapper {
+    width: fit-content !important;
+    min-width: 10ch !important;
+  }
+  .add-task-modal .add-task-date-time .date-fake-wrapper .fake-input {
+    padding: 4px 8px !important;
+    width: fit-content !important;
+    min-width: 10ch !important;
+  }
+  .add-task-modal .add-task-date-time .add-task-time-input {
+    width: fit-content !important;
+    min-width: 5ch !important;
+    padding: 4px 8px !important;
+  }
+
   .layout-control-btn-right {
     margin-left: auto;
-    padding: 6px 12px;
-    font-size: 14px;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
     font-weight: normal;
     border-radius: 4px;
     height: 32px;
     box-sizing: border-box;
+    width: fit-content !important;
   }
 
   .layout-control .layout-edit-btn {
     height: 32px;
-    padding: 6px 12px;
-    font-size: 14px;
+    padding: 6px 10px !important;
+    font-size: 13px !important;
     border-radius: 4px;
     box-sizing: border-box;
+    width: fit-content !important;
+  }
+
+  /* 手機版：按鈕水平長度貼合文字 */
+  .add-task-modal .cancel-btn,
+  .add-task-modal .save-btn {
+    padding: 6px 10px !important;
+    width: fit-content !important;
+  }
+  .capsules-panel .capsule-designer > div:first-child button {
+    padding: 6px 10px !important;
+    width: fit-content !important;
+  }
+  .capsules-panel .capsule-designer .designer-tree .template-node-row button {
+    padding: 4px !important;
+  }
+  .project-content .layout-item[data-layout-id="repeat-settings"] .header-progress-btn {
+    padding: 4px 8px !important;
+    width: fit-content !important;
+  }
+  /* 任務詳細頁：四個日期時間按鈕貼合文字，不縮減文字 */
+  .project-content .layout-item[data-layout-id="start-date"] .task-datetime-section .date-fake-wrapper {
+    width: fit-content !important;
+    min-width: 10ch !important;
+  }
+  .project-content .layout-item[data-layout-id="start-date"] .task-datetime-section .date-fake-wrapper .fake-input {
+    width: fit-content !important;
+    min-width: 10ch !important;
+    padding: 4px 8px !important;
+  }
+  .project-content .layout-item[data-layout-id="start-date"] .task-datetime-section .date-fake-wrapper + .fake-input {
+    width: fit-content !important;
+    min-width: 5ch !important;
+    padding: 4px 8px !important;
   }
 
   /* 手機版：移除綠色區隔線（insert-toolbar、task-details-container 編輯模式邊框） */
@@ -4176,6 +4330,8 @@ body.is-dragging-task .project-subitems {
   }
   .project-content .task-properties-section select {
     padding: 4px 6px !important;
+    width: fit-content !important;
+    min-width: 0 !important;
   }
 
   /* 手機版：子任務清單兩個一行 */
