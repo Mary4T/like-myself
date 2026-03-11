@@ -3949,7 +3949,7 @@ body.is-dragging-task .project-subitems {
   .project-content.project-content-mobile {
     flex: 1;
     order: -1;
-    padding: 12px 4px;
+    padding: 12px 0;
     padding-top: 12px;
     padding-bottom: 80px !important;
     min-height: 60vh;
@@ -3958,11 +3958,15 @@ body.is-dragging-task .project-subitems {
     max-width: 100%;
     width: 100%;
     box-sizing: border-box;
+    /* 手機版：改為 block 或 column，避免 flex 置中導致子元素不撐滿 */
+    display: block !important;
   }
 
   .task-details-container {
     max-width: 100%;
+    width: 100%;
     overflow-x: hidden;
+    box-sizing: border-box;
   }
 
   .task-tab-content {
@@ -3970,29 +3974,63 @@ body.is-dragging-task .project-subitems {
     max-width: 100%;
   }
 
-  /* 手機版：移除外框（圓角、陰影），讓主要內容區更寬敞 */
+  /* 手機版：移除外框（圓角、陰影），主要內容區接近滿版 */
   .project-content .project-welcome,
   .project-content .task-details,
   .project-content .task-details-container .task-details {
     border-radius: 0 !important;
     box-shadow: none !important;
     max-width: 100% !important;
-    padding-left: 4px !important;
-    padding-right: 4px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     box-sizing: border-box;
   }
 
   .task-tab-content .task-details {
     max-width: 100% !important;
-    padding: 12px 4px !important;
+    padding: 12px 8px !important;
+    box-sizing: border-box;
+  }
+
+  /* 屬性、日曆頁面：滿版，移除左右 padding */
+  .task-tab-content .task-details:has(.task-tags-panel),
+  .task-tab-content .task-details:has(.calendar-view) {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* 屬性頁：面板 minimal 留白，接近滿版 */
+  .task-tab-content .task-details:has(.task-tags-panel) .task-tags-panel {
+    padding-left: 4px;
+    padding-right: 4px;
+    box-sizing: border-box;
+  }
+
+  /* 日曆內容區滿版 */
+  .task-tab-content .task-details:has(.calendar-view) .calendar-view {
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    box-sizing: border-box;
+  }
+
+  /* 分頁列：minimal 留白，接近滿版 */
+  .task-details .task-tabs {
+    padding-left: 4px;
+    padding-right: 4px;
     box-sizing: border-box;
   }
 
   .gantt-container {
     height: 400px;
-    overflow-x: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     min-width: 0;
     max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
   }
 
   .gantt-container.day-view {
@@ -4001,7 +4039,10 @@ body.is-dragging-task .project-subitems {
   }
 
   .gantt-timeline {
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
     min-width: 0 !important;
     max-width: 100%;
   }
@@ -4215,6 +4256,86 @@ body.is-dragging-task .project-subitems {
   .project-content .task-details-container .task-details,
   .insert-toolbar {
     border: none !important;
+  }
+
+  /* 手機版概覽：支援手指滑動查看右側被遮住的區域 */
+  .overview-table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+  .overview-table {
+    min-width: 650px;
+  }
+  /* 手機版甘特圖：隱藏「甘特圖」字樣 */
+  .project-content .gantt-header h3 {
+    display: none !important;
+  }
+
+  /* 手機版甘特圖：日/週/月視圖、篩選按鈕同一行，置左上角 */
+  .project-content .gantt-header {
+    justify-content: flex-start !important;
+  }
+  .project-content .gantt-controls {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+  /* 手機版甘特圖：第一行＝日/週/月視圖、顯示下拉、篩選；第二行＝日期選擇；第三行＝欄寬 */
+  .project-content .gantt-zoom-btn,
+  .project-content .gantt-display-mode-control,
+  .project-content .gantt-filter-btn {
+    flex: 1;
+    min-width: 0;
+  }
+  .project-content .gantt-zoom-btn {
+    padding: 6px 4px !important;
+    font-size: 12px !important;
+  }
+  .project-content .gantt-display-mode-control select {
+    width: 100%;
+    padding: 6px 6px !important;
+    font-size: 12px !important;
+    margin-right: 0 !important;
+  }
+  .project-content .gantt-filter-btn {
+    padding: 6px 4px !important;
+    font-size: 12px !important;
+  }
+  /* 日視圖控制區：移到下一行，日期與欄寬同一行 */
+  .project-content .gantt-controls .day-view-controls {
+    order: 10;
+    flex-basis: 100%;
+    flex-direction: row;
+    display: flex !important;
+    gap: 8px;
+    margin-right: 0 !important;
+    margin-top: 8px;
+  }
+  .project-content .gantt-controls .day-view-controls .column-width-control {
+    margin-left: 0;
+  }
+  /* 手機版甘特圖：日期選擇按鈕與詳細頁開始日期相同樣式 */
+  .project-content .gantt-controls .day-view-controls .date-fake-wrapper {
+    width: fit-content !important;
+    min-width: 10ch !important;
+  }
+  .project-content .gantt-controls .day-view-controls .date-fake-wrapper .fake-input {
+    width: fit-content !important;
+    min-width: 10ch !important;
+    padding: 4px 8px !important;
+  }
+  /* 手機版甘特圖：隱藏「任務條顯示：」字樣 */
+  .project-content .gantt-display-mode-label {
+    display: none !important;
+  }
+
+  /* 手機版概覽：任務名稱、路徑欄文字置左 */
+  .overview-table th:first-child,
+  .overview-table td:first-child,
+  .overview-table th:last-child,
+  .overview-table td:last-child {
+    text-align: left !important;
   }
 
   /* 手機版詳細頁：縮短各功能區塊間隔 */

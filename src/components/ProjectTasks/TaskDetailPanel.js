@@ -195,6 +195,7 @@ const TaskDetailPanel = (props) => {
 
   const [showChartFilterPanel, setShowChartFilterPanel] = useState(false);
   const chartFilterRef = useRef(null);
+  const dayViewDateInputRef = useRef(null);
   const [calendarStyleMode, setCalendarStyleMode] = useState(() => {
     try {
       const saved = localStorage.getItem(CALENDAR_STYLE_STORAGE_KEY);
@@ -1088,14 +1089,13 @@ const TaskDetailPanel = (props) => {
 
       return (
         <div className="calendar-view" style={{ width: '100%', margin: 0, padding: 0, background: 'transparent' }}>
-          <div className="calendar-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '0 0 44px 0', width: '100%', boxSizing: 'border-box', zIndex: 2 }}>
+          <div className="calendar-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: isMobile ? '0 0 16px 0' : '0 0 44px 0', width: '100%', boxSizing: 'border-box', zIndex: 2 }}>
             <button onClick={() => setCalendarDate(new Date(year, month - 6, 1))} style={{ position: 'absolute', left: '20px', background: '#52D0FF', color: 'white', border: 'none', borderRadius: '4px', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', zIndex: 5 }}>←</button>
             <h3 style={{ margin: 0, fontSize: '20px', textAlign: 'center' }}>
               {plannerMonths[0].getFullYear()}年{plannerMonths[0].getMonth() + 1}月 - {plannerMonths[5].getFullYear()}年{plannerMonths[5].getMonth() + 1}月
             </h3>
             <div className="calendar-header-right" style={{ position: 'absolute', top: '0', right: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
               <button onClick={() => setCalendarDate(new Date(year, month + 6, 1))} style={{ background: '#52D0FF', color: 'white', border: 'none', borderRadius: '4px', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>→</button>
-              <div className="gantt-display-mode-control" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}><label style={{ fontSize: '12px', color: '#666' }}>任務條顯示:</label><select value={ganttTaskDisplayMode} onChange={(e) => setGanttTaskDisplayMode(e.target.value)} style={{ padding: '4px 12px', border: '1px solid #E8EDF2', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', backgroundColor: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}><option value="default">預設</option><option value="level">層級</option><option value="priority">優先級</option><option value="custom">屬性</option></select></div>
             </div>
           </div>
           <div style={{ border: '1px solid #d8dde3', background: '#fff', borderRadius: '6px', overflowX: 'hidden' }}>
@@ -1163,12 +1163,11 @@ const TaskDetailPanel = (props) => {
     }
     return (
       <div className="calendar-view" style={{ width: '100%', margin: 0, padding: 0, background: 'transparent' }}>
-        <div className="calendar-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '0 0 44px 0', width: '100%', boxSizing: 'border-box', zIndex: 2 }}>
+        <div className="calendar-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: isMobile ? '0 0 16px 0' : '0 0 44px 0', width: '100%', boxSizing: 'border-box', zIndex: 2 }}>
           <button onClick={() => setCalendarDate(new Date(year, month - 1, 1))} style={{ position: 'absolute', left: '20px', background: '#52D0FF', color: 'white', border: 'none', borderRadius: '4px', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', zIndex: 5 }}>←</button>
           <h3 style={{ margin: 0, fontSize: '20px', textAlign: 'center' }}>{year}年 {monthNames[month]}</h3>
           <div className="calendar-header-right" style={{ position: 'absolute', top: '0', right: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
             <button onClick={() => setCalendarDate(new Date(year, month + 1, 1))} style={{ background: '#52D0FF', color: 'white', border: 'none', borderRadius: '4px', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>→</button>
-            <div className="gantt-display-mode-control" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}><label style={{ fontSize: '12px', color: '#666' }}>任務條顯示:</label><select value={ganttTaskDisplayMode} onChange={(e) => setGanttTaskDisplayMode(e.target.value)} style={{ padding: '4px 12px', border: '1px solid #E8EDF2', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', backgroundColor: 'white', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}><option value="default">預設</option><option value="level">層級</option><option value="priority">優先級</option><option value="custom">屬性</option></select></div>
           </div>
         </div>
         <div className="calendar-grid" style={{ border: '1px solid #eee', background: '#fff', display: 'flex', flexDirection: 'column', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
@@ -1514,15 +1513,23 @@ const TaskDetailPanel = (props) => {
                 </div>
               </div>
             )}
-            {(activeTab === 'gantt' || activeTab === 'calendar' || activeTab === 'overview') && (
-              <div ref={chartFilterRef} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', position: 'relative' }}>
+            {(activeTab === 'calendar' || activeTab === 'overview') && (
+              <div ref={chartFilterRef} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginBottom: '10px', position: 'relative' }}>
                 {activeTab === 'calendar' && (
                   <button
                     onClick={() => setCalendarStyleMode(prev => (prev === 'monthly' ? 'planner' : 'monthly'))}
-                    style={{ padding: '6px 10px', border: '1px solid #E8EDF2', borderRadius: '6px', background: '#fff', cursor: 'pointer', fontSize: '12px', marginRight: '8px' }}
+                    style={{ padding: '6px 10px', border: '1px solid #E8EDF2', borderRadius: '6px', background: '#fff', cursor: 'pointer', fontSize: '12px' }}
                   >
                     樣式：{calendarStyleMode === 'planner' ? '年計畫表' : '月格'}
                   </button>
+                )}
+                {activeTab === 'calendar' && (
+                  <select value={ganttTaskDisplayMode} onChange={(e) => setGanttTaskDisplayMode(e.target.value)} style={{ padding: '6px 10px', border: '1px solid #E8EDF2', borderRadius: '6px', background: '#fff', cursor: 'pointer', fontSize: '12px' }}>
+                    <option value="default">預設</option>
+                    <option value="level">層級</option>
+                    <option value="priority">優先級</option>
+                    <option value="custom">屬性</option>
+                  </select>
                 )}
                 <button
                   onClick={() => setShowChartFilterPanel(prev => !prev)}
@@ -1543,7 +1550,7 @@ const TaskDetailPanel = (props) => {
                       </span>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: isMobile ? 'flex-start' : 'flex-end', gap: '8px', marginBottom: '12px' }}>
                     <button onClick={toggleSelectAllInOverview} style={{ padding: '6px 12px', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer' }}>
                       {visibleSelectedInOverview === overviewFilteredTasks.length && overviewFilteredTasks.length > 0 ? '取消全選' : '全選'}
                     </button>
@@ -1736,11 +1743,11 @@ const TaskDetailPanel = (props) => {
               </div>
             )}
             {activeTab === 'tags' && (
-              <div className="task-details" style={{ width: '100%', maxWidth: '1600px', background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', boxSizing: 'border-box', margin: '0 auto' }}>
+              <div className="task-details" style={{ width: '100%', maxWidth: '1600px', background: 'white', padding: isMobile ? '24px 0' : '24px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', boxSizing: 'border-box', margin: '0 auto' }}>
                 <div className="task-tags-panel" style={{ width: '100%' }}>
                   <div className="add-tag-section" style={{ padding: '16px', background: '#f8f9fa', borderRadius: '8px', marginBottom: '24px' }}>
                     <h4 style={{ marginBottom: '12px' }}>新增屬性</h4>
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className="add-tag-row" style={{ display: 'flex', gap: isMobile ? '6px' : '12px' }}>
                       <input
                         type="text"
                         placeholder="名稱"
@@ -1766,10 +1773,10 @@ const TaskDetailPanel = (props) => {
 
                   <div className="tags-list">
                     <h4 style={{ marginBottom: '8px' }}>所有屬性</h4>
-                    <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#999' }}>
-                      勾選：計入甘特圖、進度、經驗值；取消勾選：排除於上述統計（日曆仍顯示）
+                    <p className="tags-list-note" style={{ margin: '0 0 16px 0', fontSize: '13px', color: '#999' }}>
+                      勾選：計入甘特圖、進度、經驗值<br />取消勾選：排除於上述統計（日曆仍顯示）
                     </p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                    <div className="tags-list-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                       {taskTags.map((tag) => {
                         const isDropTarget = dragOverTagId === String(tag.id);
                         const borderTop = isDropTarget && dragOverTagSide === 'before' ? '2px solid #52D0FF' : '1px solid #e0e0e0';
@@ -1857,16 +1864,20 @@ const TaskDetailPanel = (props) => {
               </div>
             )}
             {activeTab === 'gantt' && (
-              <div className="task-details" style={{ width: '100%', maxWidth: '1600px', background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', boxSizing: 'border-box', margin: '0 auto' }}>
-                <div className="gantt-panel" style={{ width: '100%', padding: 0 }}><div className="gantt-header"><h3>甘特圖</h3><div className="gantt-controls"><div className="gantt-display-mode-control"><label style={{ marginRight: '8px', fontSize: '12px', color: '#666' }}>任務條顯示:</label><select value={ganttTaskDisplayMode} onChange={(e) => setGanttTaskDisplayMode(e.target.value)} style={{ padding: '6px 12px', border: '1px solid #E8EDF2', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', background: 'white', marginRight: '10px' }}><option value="default">預設</option><option value="level">層級</option><option value="priority">優先級</option><option value="custom">屬性</option></select></div>{ganttZoom === 'day' && <div className="day-view-controls" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: '10px' }}><input type="date" value={dayViewDate.toISOString().split('T')[0]} onChange={(e) => setDayViewDate(new Date(e.target.value))} className="date-input-direct" /><div className="column-width-control" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><label style={{ fontSize: '12px' }}>欄寬:</label><input type="range" min="20" max="160" value={ganttColumnWidth} onChange={(e) => handleColumnWidthChange(parseInt(e.target.value))} className="column-width-slider" /><span className="column-width-value" style={{ fontSize: '12px' }}>{ganttColumnWidth}px</span></div></div>}<button className={`gantt-zoom-btn ${ganttZoom === 'day' ? 'active' : ''}`} onClick={() => setGanttZoom('day')}>日視圖</button><button className={`gantt-zoom-btn ${ganttZoom === 'week' ? 'active' : ''}`} onClick={() => setGanttZoom('week')}>週視圖</button><button className={`gantt-zoom-btn ${ganttZoom === 'month' ? 'active' : ''}`} onClick={() => setGanttZoom('month')}>月視圖</button></div></div><div className={`gantt-container ${ganttZoom === 'day' ? 'day-view' : ''}`} ref={ganttTimelineRef}><div className="gantt-timeline" onMouseLeave={handleTaskHoverLeave}><div className="gantt-timeline-header">{renderTimelineHeader()}</div><div className={`gantt-timeline-content ${ganttZoom === 'month' ? 'month-view' : ''}`}>{ganttZoom === 'day' ? Array.from({ length: 24 }).map((_, i) => <div key={i} className="gantt-time-row day-view-time-row" style={{ height: '30px', display: 'flex', alignItems: 'center' }}><div className="gantt-time-label-cell">{String(i).padStart(2, '0')}:00</div>{dayViewTasks.map(t => <div key={`${t.id}-${i}`} className="gantt-task-cell day-view-task-cell" style={{ width: `${ganttColumnWidth}px`, height: '30px', position: 'relative' }}>{renderDayTaskBar(t, i)}</div>)}</div>) : ganttTaskRows.map(row => <div key={row.id} className="gantt-task-bar-container" style={{ position: 'relative', height: '30px' }}>{getRowWindowsForGantt(row).map((w, idx) => renderTaskBar({ ...row, _windowStart: w.start, _windowEnd: w.end, _instanceKey: w.key || `${row.id}-${idx}` }))}</div>)}</div></div></div></div></div>
+              <div ref={chartFilterRef} style={{ position: 'relative' }}>
+                <div className="task-details" style={{ width: '100%', maxWidth: '1600px', background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', boxSizing: 'border-box', margin: '0 auto' }}>
+                  <div className="gantt-panel" style={{ width: '100%', padding: 0 }}><div className="gantt-header"><h3>甘特圖</h3><div className="gantt-controls">{ganttZoom === 'day' && <div className="day-view-controls" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: '10px' }}><div className="date-fake-wrapper" style={{ width: 'fit-content', minWidth: '10ch' }}><div className="fake-input" onClick={() => dayViewDateInputRef.current?.showPicker?.()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px', padding: isMobile ? '6px 8px' : undefined }}>{formatDateForInput(dayViewDate.toISOString().split('T')[0]) || 'YYYY/MM/DD'}</div><input ref={dayViewDateInputRef} type="date" value={dayViewDate.toISOString().split('T')[0]} onChange={(e) => setDayViewDate(new Date(e.target.value))} style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }} /></div><div className="column-width-control" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><label style={{ fontSize: '12px' }}>欄寬:</label><input type="range" min="20" max="160" value={ganttColumnWidth} onChange={(e) => handleColumnWidthChange(parseInt(e.target.value))} className="column-width-slider" /><span className="column-width-value" style={{ fontSize: '12px' }}>{ganttColumnWidth}px</span></div></div>}<button className={`gantt-zoom-btn ${ganttZoom === 'day' ? 'active' : ''}`} onClick={() => setGanttZoom('day')}>日視圖</button><button className={`gantt-zoom-btn ${ganttZoom === 'week' ? 'active' : ''}`} onClick={() => setGanttZoom('week')}>週視圖</button><button className={`gantt-zoom-btn ${ganttZoom === 'month' ? 'active' : ''}`} onClick={() => setGanttZoom('month')}>月視圖</button><div className="gantt-display-mode-control"><label className="gantt-display-mode-label" style={{ marginRight: '8px', fontSize: '12px', color: '#666' }}>任務條顯示:</label><select value={ganttTaskDisplayMode} onChange={(e) => setGanttTaskDisplayMode(e.target.value)} style={{ padding: '6px 12px', border: '1px solid #E8EDF2', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', background: 'white', marginRight: '10px' }}><option value="default">預設</option><option value="level">層級</option><option value="priority">優先級</option><option value="custom">屬性</option></select></div><button className="gantt-filter-btn" onClick={() => setShowChartFilterPanel(prev => !prev)} style={{ padding: '6px 10px', border: '1px solid #E8EDF2', borderRadius: '6px', background: '#fff', cursor: 'pointer', fontSize: '12px' }}>篩選</button></div></div>{showChartFilterPanel && renderChartFilterPanel()}<div className={`gantt-container ${ganttZoom === 'day' ? 'day-view' : ''}`} ref={ganttTimelineRef}><div className="gantt-timeline" onMouseLeave={handleTaskHoverLeave}><div className="gantt-timeline-header">{renderTimelineHeader()}</div><div className={`gantt-timeline-content ${ganttZoom === 'month' ? 'month-view' : ''}`}>{ganttZoom === 'day' ? Array.from({ length: 24 }).map((_, i) => <div key={i} className="gantt-time-row day-view-time-row" style={{ height: '30px', display: 'flex', alignItems: 'center' }}><div className="gantt-time-label-cell">{String(i).padStart(2, '0')}:00</div>{dayViewTasks.map(t => <div key={`${t.id}-${i}`} className="gantt-task-cell day-view-task-cell" style={{ width: `${ganttColumnWidth}px`, height: '30px', position: 'relative' }}>{renderDayTaskBar(t, i)}</div>)}</div>) : ganttTaskRows.map(row => <div key={row.id} className="gantt-task-bar-container" style={{ position: 'relative', height: '30px' }}>{getRowWindowsForGantt(row).map((w, idx) => renderTaskBar({ ...row, _windowStart: w.start, _windowEnd: w.end, _instanceKey: w.key || `${row.id}-${idx}` }))}</div>)}</div></div></div></div>
+                </div>
+              </div>
             )}
             {activeTab === 'calendar' && (
-              <div className="task-details" style={{ width: '100%', maxWidth: '1600px', background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', boxSizing: 'border-box', margin: '0 auto' }}>
+              <div className="task-details" style={{ width: '100%', maxWidth: '1600px', background: 'white', padding: isMobile ? '24px 0' : '24px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', boxSizing: 'border-box', margin: '0 auto' }}>
                 <div className="calendar-view" style={{ width: '100%', margin: 0, padding: 0 }}>{renderCalendarView()}</div>
               </div>
             )}
           </div>
         </div>
+        {(!isMobile || activeTab === 'details') && (
         <div className={`insert-toolbar ${toolbarCollapsed ? 'collapsed' : ''}`}>
           <div className="toolbar-header"><h4>🛠️ 插入工具列</h4><button className="collapse-btn" style={{ background: '#fff', border: '1px solid #e1e5e9' }} onClick={() => setToolbarCollapsed(!toolbarCollapsed)}>{toolbarCollapsed ? '📂' : '📁'}</button></div>
           {!toolbarCollapsed && (
@@ -1954,6 +1965,7 @@ const TaskDetailPanel = (props) => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

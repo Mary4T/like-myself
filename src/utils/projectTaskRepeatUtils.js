@@ -208,15 +208,15 @@ const resetTaskTreeIfNeeded = (task, allTasksState) => {
           ? new Date(task.created)
           : new Date();
     if (checkTime < anchor) checkTime = new Date(anchor.getTime());
+    let isFirstPeriod = true; // 只有第一個補記週期使用當前任務狀態（用戶最後一次互動的週期）
     while (checkTime.getTime() < windowStart.getTime()) {
       const key = getLocalDateKeyForRepeat(task, checkTime);
       if (!nextRepeatLog[key]) {
-        const nextCheckTime = addCycle(checkTime);
-        const isJustFinished = nextCheckTime.getTime() >= windowStart.getTime();
         const snapshot =
           task.children && task.children.length > 0 ? task.children.map(createTaskSnapshot) : [];
-        const isCompleted = isJustFinished ? task.status === 'completed' || task.completed : false;
-        const progress = isJustFinished ? task.details?.progress || 0 : 0;
+        const useCurrentStatus = isFirstPeriod;
+        const isCompleted = useCurrentStatus ? (task.status === 'completed' || task.completed) : false;
+        const progress = useCurrentStatus ? (task.details?.progress || 0) : 0;
         nextRepeatLog[key] = {
           completed: isCompleted,
           completedAt: isCompleted ? new Date().toISOString() : null,
@@ -224,6 +224,7 @@ const resetTaskTreeIfNeeded = (task, allTasksState) => {
           recordedAt: new Date().toISOString(),
           taskSnapshot: snapshot
         };
+        isFirstPeriod = false;
       }
       checkTime = addCycle(checkTime);
     }
