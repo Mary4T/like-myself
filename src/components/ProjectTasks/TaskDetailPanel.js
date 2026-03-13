@@ -1089,7 +1089,7 @@ const TaskDetailPanel = (props) => {
 
       return (
         <div className="calendar-view" style={{ width: '100%', margin: 0, padding: 0, background: 'transparent' }}>
-          <div className="calendar-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: isMobile ? '0 0 16px 0' : '0 0 44px 0', width: '100%', boxSizing: 'border-box', zIndex: 2 }}>
+          <div className="calendar-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: isMobile ? '0 0 8px 0' : '0 0 44px 0', width: '100%', boxSizing: 'border-box', zIndex: 2 }}>
             <button onClick={() => setCalendarDate(new Date(year, month - 6, 1))} style={{ position: 'absolute', left: '20px', background: '#52D0FF', color: 'white', border: 'none', borderRadius: '4px', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', zIndex: 5 }}>←</button>
             <h3 style={{ margin: 0, fontSize: '20px', textAlign: 'center' }}>
               {plannerMonths[0].getFullYear()}年{plannerMonths[0].getMonth() + 1}月 - {plannerMonths[5].getFullYear()}年{plannerMonths[5].getMonth() + 1}月
@@ -1163,7 +1163,7 @@ const TaskDetailPanel = (props) => {
     }
     return (
       <div className="calendar-view" style={{ width: '100%', margin: 0, padding: 0, background: 'transparent' }}>
-        <div className="calendar-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: isMobile ? '0 0 16px 0' : '0 0 44px 0', width: '100%', boxSizing: 'border-box', zIndex: 2 }}>
+        <div className="calendar-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: isMobile ? '0 0 8px 0' : '0 0 44px 0', width: '100%', boxSizing: 'border-box', zIndex: 2 }}>
           <button onClick={() => setCalendarDate(new Date(year, month - 1, 1))} style={{ position: 'absolute', left: '20px', background: '#52D0FF', color: 'white', border: 'none', borderRadius: '4px', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', zIndex: 5 }}>←</button>
           <h3 style={{ margin: 0, fontSize: '20px', textAlign: 'center' }}>{year}年 {monthNames[month]}</h3>
           <div className="calendar-header-right" style={{ position: 'absolute', top: '0', right: '20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
@@ -1220,7 +1220,7 @@ const TaskDetailPanel = (props) => {
         </div>
         <div className="task-content-layout">
           <div className="task-details">
-            <div className="task-tabs" style={{ marginBottom: '20px' }}>
+            <div className="task-tabs" style={{ marginBottom: isMobile ? '8px' : '20px' }}>
               {['details', 'overview', 'tags', 'gantt', 'calendar'].map(tab => (
                 <button key={tab} className={`tab-button ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
                   {tab === 'details' ? (isMobile ? '詳細' : '任務詳細') : tab === 'overview' ? (isMobile ? '概覽' : '任務概覽') : tab === 'tags' ? (isMobile ? '屬性' : '任務屬性') : tab === 'gantt' ? '甘特圖' : '日曆'}
@@ -1251,7 +1251,7 @@ const TaskDetailPanel = (props) => {
       </div>
       <div className={`task-content-layout ${toolbarCollapsed ? 'toolbar-collapsed' : ''}`}>
         <div className="task-details">
-          <div className="task-tabs" style={{ marginBottom: '20px' }}>
+          <div className="task-tabs" style={{ marginBottom: isMobile ? '8px' : '20px' }}>
             {['details', 'overview', 'tags', 'gantt', 'calendar'].map(tab => (
               <button key={tab} className={`tab-button ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
                 {tab === 'details' ? (isMobile ? '詳細' : '任務詳細') : tab === 'overview' ? (isMobile ? '概覽' : '任務概覽') : tab === 'tags' ? (isMobile ? '屬性' : '任務屬性') : tab === 'gantt' ? '甘特圖' : '日曆'}
@@ -1513,8 +1513,8 @@ const TaskDetailPanel = (props) => {
                 </div>
               </div>
             )}
-            {(activeTab === 'calendar' || activeTab === 'overview') && (
-              <div ref={chartFilterRef} style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginBottom: '10px', position: 'relative' }}>
+            {(activeTab === 'calendar' || activeTab === 'overview' || (activeTab === 'gantt' && isMobile)) && (
+              <div ref={chartFilterRef} className="chart-filter-bar" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px', marginBottom: isMobile ? '3px' : '10px', position: 'relative' }}>
                 {activeTab === 'calendar' && (
                   <button
                     onClick={() => setCalendarStyleMode(prev => (prev === 'monthly' ? 'planner' : 'monthly'))}
@@ -1531,12 +1531,14 @@ const TaskDetailPanel = (props) => {
                     <option value="custom">屬性</option>
                   </select>
                 )}
-                <button
-                  onClick={() => setShowChartFilterPanel(prev => !prev)}
-                  style={{ padding: '6px 10px', border: '1px solid #E8EDF2', borderRadius: '6px', background: '#fff', cursor: 'pointer', fontSize: '12px' }}
-                >
-                  篩選
-                </button>
+                {(activeTab === 'calendar' || activeTab === 'overview' || activeTab === 'gantt') && (
+                  <button
+                    onClick={() => setShowChartFilterPanel(prev => !prev)}
+                    style={{ padding: '6px 10px', border: '1px solid #E8EDF2', borderRadius: '6px', background: '#fff', cursor: 'pointer', fontSize: '12px' }}
+                  >
+                    篩選
+                  </button>
+                )}
                 {showChartFilterPanel && renderChartFilterPanel()}
               </div>
             )}
@@ -1864,7 +1866,7 @@ const TaskDetailPanel = (props) => {
               </div>
             )}
             {activeTab === 'gantt' && (
-              <div ref={chartFilterRef} style={{ position: 'relative' }}>
+              <div ref={isMobile ? null : chartFilterRef} style={{ position: 'relative' }}>
                 <div className="task-details" style={{ width: '100%', maxWidth: '1600px', background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)', boxSizing: 'border-box', margin: '0 auto' }}>
                   <div className="gantt-panel" style={{ width: '100%', padding: 0 }}><div className="gantt-header"><h3>甘特圖</h3><div className="gantt-controls">{ganttZoom === 'day' && <div className="day-view-controls" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: '10px' }}><div className="date-fake-wrapper" style={{ width: 'fit-content', minWidth: '10ch' }}><div className="fake-input" onClick={() => dayViewDateInputRef.current?.showPicker?.()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px', padding: isMobile ? '6px 8px' : undefined }}>{formatDateForInput(dayViewDate.toISOString().split('T')[0]) || 'YYYY/MM/DD'}</div><input ref={dayViewDateInputRef} type="date" value={dayViewDate.toISOString().split('T')[0]} onChange={(e) => setDayViewDate(new Date(e.target.value))} style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }} /></div><div className="column-width-control" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><label style={{ fontSize: '12px' }}>欄寬:</label><input type="range" min="20" max="160" value={ganttColumnWidth} onChange={(e) => handleColumnWidthChange(parseInt(e.target.value))} className="column-width-slider" /><span className="column-width-value" style={{ fontSize: '12px' }}>{ganttColumnWidth}px</span></div></div>}<button className={`gantt-zoom-btn ${ganttZoom === 'day' ? 'active' : ''}`} onClick={() => setGanttZoom('day')}>日視圖</button><button className={`gantt-zoom-btn ${ganttZoom === 'week' ? 'active' : ''}`} onClick={() => setGanttZoom('week')}>週視圖</button><button className={`gantt-zoom-btn ${ganttZoom === 'month' ? 'active' : ''}`} onClick={() => setGanttZoom('month')}>月視圖</button><div className="gantt-display-mode-control"><label className="gantt-display-mode-label" style={{ marginRight: '8px', fontSize: '12px', color: '#666' }}>任務條顯示:</label><select value={ganttTaskDisplayMode} onChange={(e) => setGanttTaskDisplayMode(e.target.value)} style={{ padding: '6px 12px', border: '1px solid #E8EDF2', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', background: 'white', marginRight: '10px' }}><option value="default">預設</option><option value="level">層級</option><option value="priority">優先級</option><option value="custom">屬性</option></select></div><button className="gantt-filter-btn" onClick={() => setShowChartFilterPanel(prev => !prev)} style={{ padding: '6px 10px', border: '1px solid #E8EDF2', borderRadius: '6px', background: '#fff', cursor: 'pointer', fontSize: '12px' }}>篩選</button></div></div>{showChartFilterPanel && renderChartFilterPanel()}<div className={`gantt-container ${ganttZoom === 'day' ? 'day-view' : ''}`} ref={ganttTimelineRef}><div className="gantt-timeline" onMouseLeave={handleTaskHoverLeave}><div className="gantt-timeline-header">{renderTimelineHeader()}</div><div className={`gantt-timeline-content ${ganttZoom === 'month' ? 'month-view' : ''}`}>{ganttZoom === 'day' ? Array.from({ length: 24 }).map((_, i) => <div key={i} className="gantt-time-row day-view-time-row" style={{ height: '30px', display: 'flex', alignItems: 'center' }}><div className="gantt-time-label-cell">{String(i).padStart(2, '0')}:00</div>{dayViewTasks.map(t => <div key={`${t.id}-${i}`} className="gantt-task-cell day-view-task-cell" style={{ width: `${ganttColumnWidth}px`, height: '30px', position: 'relative' }}>{renderDayTaskBar(t, i)}</div>)}</div>) : ganttTaskRows.map(row => <div key={row.id} className="gantt-task-bar-container" style={{ position: 'relative', height: '30px' }}>{getRowWindowsForGantt(row).map((w, idx) => renderTaskBar({ ...row, _windowStart: w.start, _windowEnd: w.end, _instanceKey: w.key || `${row.id}-${idx}` }))}</div>)}</div></div></div></div>
                 </div>

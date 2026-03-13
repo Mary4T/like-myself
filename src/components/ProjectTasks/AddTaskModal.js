@@ -23,6 +23,10 @@ const AddTaskModal = ({
   const [parentDropdownOpen, setParentDropdownOpen] = React.useState(false);
   const [layoutDropdownOpen, setLayoutDropdownOpen] = React.useState(false);
   const [attrDropdownOpen, setAttrDropdownOpen] = React.useState(false);
+  const [showTimePicker, setShowTimePicker] = React.useState(false);
+  const [isStartTimePicker, setIsStartTimePicker] = React.useState(false);
+  const [tpHour, setTpHour] = React.useState(0);
+  const [tpMinute, setTpMinute] = React.useState(0);
 
   const taskRoots = tasks?.[0]?.children || [];
   const parentOptions = [];
@@ -73,6 +77,26 @@ const AddTaskModal = ({
     return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
   };
 
+  const parseTimeForPicker = (timeStr) => {
+    const [h = 0, m = 0] = (timeStr || '00:00').split(':').map(Number);
+    return { hour: Math.min(23, Math.max(0, h)), minute: Math.min(55, Math.floor(m / 5) * 5) };
+  };
+
+  const openTimePicker = (isStart) => {
+    const timeStr = isStart ? (newTask.startTime || '00:00') : (newTask.dueTime || '23:59');
+    const { hour, minute } = parseTimeForPicker(timeStr);
+    setTpHour(hour);
+    setTpMinute(minute);
+    setIsStartTimePicker(isStart);
+    setShowTimePicker(true);
+  };
+
+  const confirmTimePicker = () => {
+    const timeStr = `${String(tpHour).padStart(2, '0')}:${String(tpMinute).padStart(2, '0')}`;
+    setNewTask(prev => ({ ...prev, [isStartTimePicker ? 'startTime' : 'dueTime']: timeStr }));
+    setShowTimePicker(false);
+  };
+
   const modalContent = (
     <div className="modal-overlay add-task-modal" style={{ zIndex: 10005 }} onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -90,9 +114,9 @@ const AddTaskModal = ({
             />
           </div>
           <div className="form-group add-task-date-time" style={{ marginBottom: '10px' }}>
-            <div className="add-task-date-time-inner" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexWrap: 'nowrap', width: 'max-content', maxWidth: '100%' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                <div className="date-fake-wrapper" style={{ width: '120px' }}>
+            <div className="add-task-date-time-inner" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', rowGap: '8px' }}>
+              <div className="add-task-datetime-block" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                <div className="date-fake-wrapper add-task-date-block" style={{ width: '120px', minWidth: '120px', flexShrink: 0 }}>
                   <div className="fake-input" onClick={() => startDateInputRef.current?.showPicker()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>
                     {formatDateLabel(newTask.startDate)}
                   </div>
@@ -104,20 +128,15 @@ const AddTaskModal = ({
                     style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
                   />
                 </div>
-                <div className="fake-input add-task-time-input" onClick={() => document.getElementById('new-task-start-time')?.showPicker?.()} style={{ width: '100px', textAlign: 'center' }}>
-                  {newTask.startTime || '00:00'}
+                <div className="add-task-time-block" style={{ flexShrink: 0 }}>
+                  <div className="fake-input add-task-time-input" onClick={() => openTimePicker(true)} style={{ minWidth: '72px', width: '72px', textAlign: 'center', cursor: 'pointer' }}>
+                    {newTask.startTime || '00:00'}
+                  </div>
                 </div>
-                <input
-                  id="new-task-start-time"
-                  type="time"
-                  value={newTask.startTime || '00:00'}
-                  onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value || '00:00' })}
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-                />
               </div>
               <span style={{ color: '#999', fontWeight: 500, flexShrink: 0 }}>~</span>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-                <div className="date-fake-wrapper" style={{ width: '120px' }}>
+              <div className="add-task-datetime-block" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                <div className="date-fake-wrapper add-task-date-block" style={{ width: '120px', minWidth: '120px', flexShrink: 0 }}>
                   <div className="fake-input" onClick={() => dueDateInputRef.current?.showPicker()} style={{ width: '100%', boxSizing: 'border-box', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '14px' }}>
                     {formatDateLabel(newTask.dueDate)}
                   </div>
@@ -129,16 +148,11 @@ const AddTaskModal = ({
                     style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
                   />
                 </div>
-                <div className="fake-input add-task-time-input" onClick={() => document.getElementById('new-task-due-time')?.showPicker?.()} style={{ width: '100px', textAlign: 'center' }}>
-                  {newTask.dueTime || '23:59'}
+                <div className="add-task-time-block" style={{ flexShrink: 0 }}>
+                  <div className="fake-input add-task-time-input" onClick={() => openTimePicker(false)} style={{ minWidth: '72px', width: '72px', textAlign: 'center', cursor: 'pointer' }}>
+                    {newTask.dueTime || '23:59'}
+                  </div>
                 </div>
-                <input
-                  id="new-task-due-time"
-                  type="time"
-                  value={newTask.dueTime || '23:59'}
-                  onChange={(e) => setNewTask({ ...newTask, dueTime: e.target.value || '23:59' })}
-                  style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
-                />
               </div>
             </div>
           </div>
@@ -262,6 +276,20 @@ const AddTaskModal = ({
           <button className="save-btn" onClick={onAdd}>確認新增</button>
         </div>
       </div>
+      {showTimePicker && (
+        <div className="time-picker-overlay" onClick={(e) => { e.stopPropagation(); setShowTimePicker(false); }} style={{ zIndex: 10010 }}>
+          <div className="time-picker" onClick={(e) => e.stopPropagation()}>
+            <div className="time-picker-wheels">
+              <div className="wheel">{[...Array(24)].map((_, i) => <div key={i} className={`wheel-item ${tpHour === i ? 'active' : ''}`} onClick={() => setTpHour(i)}>{String(i).padStart(2, '0')}</div>)}</div>
+              <div className="wheel">{[...Array(12)].map((_, i) => { const v = i * 5; return <div key={v} className={`wheel-item ${tpMinute === v ? 'active' : ''}`} onClick={() => setTpMinute(v)}>{String(v).padStart(2, '0')}</div>; })}</div>
+            </div>
+            <div className="time-picker-actions">
+              <button className="cancel-btn" onClick={() => setShowTimePicker(false)}>取消</button>
+              <button className="save-btn" onClick={confirmTimePicker}>確定</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

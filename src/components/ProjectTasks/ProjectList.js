@@ -521,7 +521,8 @@ const ProjectList = () => {
     const currentKey = getLocalDateKeyForRepeat(task, now);
     const nextRepeatLog = { ...(task.details?.repeatLog || {}) };
     const isCompleted = task.status === 'completed' || task.completed === true;
-    const progressVal = typeof task.details?.progress === 'number' ? task.details.progress : (isCompleted ? 100 : 0);
+    /* 當次完成時 maxProgress 必為 100，不依賴 task.details.progress（該值可能是整體完成率） */
+    const progressVal = isCompleted ? 100 : (typeof task.details?.progress === 'number' ? task.details.progress : 0);
     const createTaskSnapshot = (t) => ({
       id: t.id, title: t.title, status: t.status,
       completed: t.status === 'completed' || t.completed === true,
@@ -529,10 +530,11 @@ const ProjectList = () => {
     });
     const currentSnapshot = (task.children && task.children.length > 0) ? task.children.map(createTaskSnapshot) : [];
     const existingLog = nextRepeatLog[currentKey];
+    const effectiveProgress = isCompleted ? 100 : Math.max(0, Math.min(100, progressVal));
     nextRepeatLog[currentKey] = {
       completed: isCompleted || (existingLog?.completed || false),
       completedAt: isCompleted ? (existingLog?.completedAt || new Date().toISOString()) : (existingLog?.completedAt || null),
-      maxProgress: Math.max(existingLog?.maxProgress || 0, Math.max(0, Math.min(100, progressVal))),
+      maxProgress: Math.max(existingLog?.maxProgress || 0, effectiveProgress),
       recordedAt: existingLog?.recordedAt || new Date().toISOString(),
       taskSnapshot: currentSnapshot
     };

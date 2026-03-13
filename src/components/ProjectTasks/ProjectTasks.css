@@ -3111,6 +3111,53 @@ body.is-dragging-task .project-subitems {
   display: inline-block;
 }
 
+/* 自訂時間選擇器（AddTaskModal、ProjectList 共用） */
+.time-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+}
+.time-picker {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  width: 320px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+.time-picker-wheels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.time-picker .wheel {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid #E8EDF2;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+.time-picker .wheel-item {
+  padding: 10px 12px;
+  text-align: center;
+  color: #777;
+  cursor: pointer;
+}
+.time-picker .wheel-item.active {
+  background: #eef6ff;
+  color: #333;
+  font-weight: 600;
+}
+.time-picker-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .visually-hidden-date {
   position: absolute;
   opacity: 0;
@@ -3949,8 +3996,8 @@ body.is-dragging-task .project-subitems {
   .project-content.project-content-mobile {
     flex: 1;
     order: -1;
-    padding: 12px 0;
-    padding-top: 12px;
+    padding: 3px 0 80px 0;
+    padding-top: 3px;
     padding-bottom: 80px !important;
     min-height: 60vh;
     overflow-x: hidden;
@@ -4016,11 +4063,34 @@ body.is-dragging-task .project-subitems {
     box-sizing: border-box;
   }
 
-  /* 分頁列：minimal 留白，接近滿版 */
+  /* 頁面選擇按鈕上方留白：與日曆頁一致 (6px) */
+  .task-content-layout > .task-details {
+    padding-top: 6px !important;
+  }
+
+  /* 分頁列與控制列：留白與日曆頁一致 (6px) */
   .task-details .task-tabs {
     padding-left: 4px;
     padding-right: 4px;
+    margin-bottom: 6px !important;
     box-sizing: border-box;
+  }
+
+  /* 控制列（樣式/篩選等）：與日曆頁留白一致 */
+  .chart-filter-bar {
+    margin-bottom: 6px !important;
+  }
+
+  /* 控制列按鈕（樣式、屬性、篩選）：與日曆頁一致，概覽、日曆共用 */
+  .chart-filter-bar button,
+  .chart-filter-bar select {
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    box-sizing: border-box !important;
+    border: 1px solid #E8EDF2 !important;
+    border-radius: 6px !important;
+    background: #fff !important;
   }
 
   .gantt-container {
@@ -4049,9 +4119,24 @@ body.is-dragging-task .project-subitems {
 
   .layout-control {
     flex-wrap: nowrap;
-    padding: 8px 12px 8px 60px; /* 左側留空給懸浮樹狀圖按鈕 */
+    padding: 0 12px 4px 60px; /* 上方無留白（project-content 已有 3px），左側留空給懸浮樹狀圖按鈕 */
     justify-content: flex-start;
     gap: 8px;
+  }
+
+  /* 日曆頁：各區塊間距縮短且一致 (6px) */
+  .task-details-container:has(.calendar-view) .task-content-layout {
+    gap: 6px;
+  }
+  .task-details-container:has(.calendar-view) .task-tabs {
+    margin-bottom: 6px !important;
+  }
+  .task-details-container:has(.calendar-view) .calendar-view .calendar-header {
+    padding-bottom: 6px !important;
+  }
+  .task-details-container:has(.calendar-view) .calendar-view .calendar-grid > div:first-child {
+    min-height: 18px !important;
+    height: 18px !important;
   }
 
   .layout-control-tree-toggle {
@@ -4174,26 +4259,38 @@ body.is-dragging-task .project-subitems {
     overflow: visible !important;
   }
 
-  /* 新增任務彈窗：日期時間按鈕貼合文字，不縮減文字 */
+  /* 新增任務彈窗：日期時間區塊排版，避免擠在一起 */
   .add-task-modal .add-task-date-time-inner {
     flex-wrap: wrap !important;
     width: 100% !important;
     max-width: 100% !important;
     row-gap: 8px;
+    column-gap: 8px !important;
   }
-  .add-task-modal .add-task-date-time .date-fake-wrapper {
-    width: fit-content !important;
-    min-width: 10ch !important;
+  .add-task-modal .add-task-datetime-block {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+  .add-task-modal .add-task-date-time .date-fake-wrapper.add-task-date-block {
+    width: 110px !important;
+    min-width: 110px !important;
+    flex-shrink: 0 !important;
   }
   .add-task-modal .add-task-date-time .date-fake-wrapper .fake-input {
-    padding: 4px 8px !important;
-    width: fit-content !important;
-    min-width: 10ch !important;
+    padding: 6px 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .add-task-modal .add-task-time-block {
+    flex-shrink: 0 !important;
   }
   .add-task-modal .add-task-date-time .add-task-time-input {
-    width: fit-content !important;
-    min-width: 5ch !important;
-    padding: 4px 8px !important;
+    min-width: 72px !important;
+    width: 72px !important;
+    padding: 6px 8px !important;
+    box-sizing: border-box !important;
   }
 
   .layout-control-btn-right {
@@ -4281,10 +4378,9 @@ body.is-dragging-task .project-subitems {
     gap: 6px;
     width: 100%;
   }
-  /* 手機版甘特圖：第一行＝日/週/月視圖、顯示下拉、篩選；第二行＝日期選擇；第三行＝欄寬 */
+  /* 手機版甘特圖：第一行＝日/週/月視圖、顯示下拉、篩選（右側）；第二行＝日期選擇；第三行＝欄寬 */
   .project-content .gantt-zoom-btn,
-  .project-content .gantt-display-mode-control,
-  .project-content .gantt-filter-btn {
+  .project-content .gantt-display-mode-control {
     flex: 1;
     min-width: 0;
   }
@@ -4298,9 +4394,9 @@ body.is-dragging-task .project-subitems {
     font-size: 12px !important;
     margin-right: 0 !important;
   }
+  /* 甘特圖篩選：手機版改由 chart-filter-bar 顯示（與日曆、概覽一致），隱藏 gantt-controls 內的按鈕 */
   .project-content .gantt-filter-btn {
-    padding: 6px 4px !important;
-    font-size: 12px !important;
+    display: none !important;
   }
   /* 日視圖控制區：移到下一行，日期與欄寬同一行 */
   .project-content .gantt-controls .day-view-controls {

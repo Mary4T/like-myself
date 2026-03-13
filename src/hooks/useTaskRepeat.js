@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import * as TaskUtils from '../components/ProjectTasks/taskUtils';
-import { formatDateKeyForDisplay } from '../utils/projectTaskRepeatUtils';
+import { formatDateKeyForDisplay, getLocalDateKeyForRepeat, normalizeRepeatLog } from '../utils/projectTaskRepeatUtils';
 
 export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey) => {
   const [showRepeatLogModal, setShowRepeatLogModal] = useState(false);
@@ -8,10 +8,11 @@ export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey)
   const [expandedLogEntries, setExpandedLogEntries] = useState(new Set());
   const [showAllSubtasks, setShowAllSubtasks] = useState(false);
 
-  // 1. 基礎數據：日誌條目
+  // 1. 基礎數據：日誌條目（正規化以合併重複 key，避免同週期顯示兩次）
   const repeatLogEntries = useMemo(() => {
     if (!selectedTask) return [];
-    const log = selectedTask.details?.repeatLog || {};
+    const rawLog = selectedTask.details?.repeatLog || {};
+    const log = normalizeRepeatLog(selectedTask, rawLog);
     return Object.entries(log).map(([dateKey, info]) => ({
       dateKey,
       displayDate: formatDateKeyForDisplay(dateKey, selectedTask) || dateKey,
@@ -114,7 +115,8 @@ export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey)
     updateTasksAndSave(prev => {
       const task = TaskUtils.findTaskById(prev, selectedTask.id);
       if (!task) return prev;
-      const nextLog = { ...(task.details?.repeatLog || {}) };
+      const normalizedLog = normalizeRepeatLog(task, task.details?.repeatLog || {});
+      const nextLog = { ...normalizedLog };
       const entry = nextLog[dateKey];
       if (!entry || !entry.taskSnapshot) return prev;
 
@@ -146,7 +148,14 @@ export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey)
       const nextAllCompleted = totalNodes > 0 && nextSnapshot.every(n => n.completed);
 
       nextLog[dateKey] = { ...entry, taskSnapshot: nextSnapshot, maxProgress: nextProgress, completed: nextAllCompleted };
-      return TaskUtils.updateTaskInTree(prev, selectedTask.id, { details: { ...task.details, repeatLog: nextLog } });
+      const currentKey = getLocalDateKeyForRepeat(task, new Date());
+      const isCurrentPeriod = dateKey === currentKey;
+      const updates = { details: { ...task.details, repeatLog: nextLog } };
+      if (isCurrentPeriod) {
+        updates.status = nextAllCompleted ? 'completed' : 'pending';
+        updates.completed = nextAllCompleted;
+      }
+      return TaskUtils.updateTaskInTree(prev, selectedTask.id, updates);
     });
   }, [selectedTask, updateTasksAndSave]);
 
@@ -155,9 +164,17 @@ export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey)
     updateTasksAndSave(prev => {
       const task = TaskUtils.findTaskById(prev, selectedTask.id);
       if (!task) return prev;
-      const log = { ...(task.details?.repeatLog || {}) };
+      const normalizedLog = normalizeRepeatLog(task, task.details?.repeatLog || {});
+      const log = { ...normalizedLog };
       delete log[dateKey];
-      return TaskUtils.updateTaskInTree(prev, selectedTask.id, { details: { ...task.details, repeatLog: log } });
+      const currentKey = getLocalDateKeyForRepeat(task, new Date());
+      const isCurrentPeriod = dateKey === currentKey;
+      const updates = { details: { ...task.details, repeatLog: log } };
+      if (isCurrentPeriod) {
+        updates.status = 'pending';
+        updates.completed = false;
+      }
+      return TaskUtils.updateTaskInTree(prev, selectedTask.id, updates);
     });
   }, [selectedTask, updateTasksAndSave]);
 
@@ -178,7 +195,8 @@ export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey)
     updateTasksAndSave(prev => {
       const task = TaskUtils.findTaskById(prev, selectedTask.id);
       if (!task) return prev;
-      const nextLog = { ...(task.details?.repeatLog || {}) };
+      const normalizedLog = normalizeRepeatLog(task, task.details?.repeatLog || {});
+      const nextLog = { ...normalizedLog };
       const entry = nextLog[dateKey];
       
       const updateAllSnapshot = (nodes) => nodes.map(n => ({
@@ -190,9 +208,16 @@ export const useTaskRepeat = (selectedTask, updateTasksAndSave, getLocalDateKey)
         ...entry,
         completed: nextCompleted,
         maxProgress: nextCompleted ? 100 : 0,
-        taskSnapshot: entry.taskSnapshot ? updateAllSnapshot(entry.taskSnapshot) : []
+        taskSnapshot: entry?.taskSnapshot ? updateAllSnapshot(entry.taskSnapshot) : []
       };
-      return TaskUtils.updateTaskInTree(prev, selectedTask.id, { details: { ...task.details, repeatLog: nextLog } });
+      const currentKey = getLocalDateKeyForRepeat(task, new Date());
+      const isCurrentPeriod = dateKey === currentKey;
+      const updates = { details: { ...task.details, repeatLog: nextLog } };
+      if (isCurrentPeriod) {
+        updates.status = nextCompleted ? 'completed' : 'pending';
+        updates.completed = nextCompleted;
+      }
+      return TaskUtils.updateTaskInTree(prev, selectedTask.id, updates);
     });
   }, [selectedTask, updateTasksAndSave]);
 

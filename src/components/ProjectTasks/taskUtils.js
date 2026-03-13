@@ -163,7 +163,13 @@ export const calculateTaskProgress = (task, options = {}) => {
       const p = getRepeatProgressForDateKey(task, currentKey);
       return p !== null ? p : (task.status === 'completed' ? 100 : 0);
     }
-    // 狀況一：有截止日的重複任務 → 已完成次數 / 到截止日為止需要完成的次數
+    // 狀況一：有截止日的重複任務 → 顯示「當次完成度」（非整體完成率）
+    if (!options.dateKey && !(options.periodStart != null && options.periodEnd != null)) {
+      const currentKey = getLocalDateKeyForRepeat(task, new Date());
+      const p = getRepeatProgressForDateKey(task, currentKey);
+      return p !== null ? p : (task.status === 'completed' ? 100 : 0);
+    }
+    // 有明確 period 時才用整體完成率
     const startStr = task.details?.startDate;
     const dueStr = task.details?.dueDate;
     const interval = Math.max(1, Number(rep?.interval) || 1);
@@ -225,7 +231,8 @@ export const updateTaskInTreeWithRepeatLogPropagation = (list, taskId, updater) 
     const currentKey = getLocalDateKeyForRepeat(t, now);
     const nextLog = { ...(t.details?.repeatLog || {}) };
     const isCompleted = t.status === 'completed' || t.completed === true;
-    const progressVal = typeof t.details?.progress === 'number' ? t.details.progress : (isCompleted ? 100 : 0);
+    /* 當次完成時 maxProgress 必為 100 */
+    const progressVal = isCompleted ? 100 : (typeof t.details?.progress === 'number' ? t.details.progress : 0);
     const createSnapshot = (x) => ({
       id: x.id, title: x.title, status: x.status,
       completed: x.status === 'completed' || x.completed === true,
@@ -233,10 +240,11 @@ export const updateTaskInTreeWithRepeatLogPropagation = (list, taskId, updater) 
     });
     const snapshot = (t.children?.length) ? t.children.map(createSnapshot) : [];
     const existing = nextLog[currentKey];
+    const effectiveProgress = isCompleted ? 100 : Math.max(0, Math.min(100, progressVal));
     nextLog[currentKey] = {
       completed: isCompleted || (existing?.completed || false),
       completedAt: isCompleted ? (existing?.completedAt || new Date().toISOString()) : (existing?.completedAt || null),
-      maxProgress: Math.max(existing?.maxProgress || 0, Math.max(0, Math.min(100, progressVal))),
+      maxProgress: Math.max(existing?.maxProgress || 0, effectiveProgress),
       recordedAt: existing?.recordedAt || new Date().toISOString(),
       taskSnapshot: snapshot
     };
@@ -261,7 +269,7 @@ export const updateTaskInTreeWithRepeatLogPropagation = (list, taskId, updater) 
         const currentKey = getLocalDateKeyForRepeat(newTask, now);
         const nextLog = { ...(newTask.details?.repeatLog || {}) };
         const isCompleted = newTask.status === 'completed' || newTask.completed === true;
-        const progressVal = typeof newTask.details?.progress === 'number' ? newTask.details.progress : (isCompleted ? 100 : 0);
+        const progressVal = isCompleted ? 100 : (typeof newTask.details?.progress === 'number' ? newTask.details.progress : 0);
         const createSnapshot = (t) => ({
           id: t.id, title: t.title, status: t.status,
           completed: t.status === 'completed' || t.completed === true,
